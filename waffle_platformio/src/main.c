@@ -80,8 +80,7 @@ void task_test_SSD1306i2c(void *ignore) {
 
     ESP_LOGI(TAG, "All done!");
 
-    vTaskDelay(10000 / portTICK_PERIOD_MS);
-	//vTaskDelete(NULL);
+    vTaskDelete(NULL);
 }
 
 void print_chip_info()
