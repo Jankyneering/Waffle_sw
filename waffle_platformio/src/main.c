@@ -9,6 +9,7 @@
 #include <driver/i2c_master.h>
 #include "u8g2.h"
 #include "u8g2_esp32_hal.h"
+#include "graphics.h"
 
 // SDA - GPIO21
 #define PIN_SDA 21
@@ -67,14 +68,18 @@ void task_test_SSD1306i2c(void *ignore) {
     u8g2_SetPowerSave(&u8g2, 0);  // wake up display
     ESP_LOGI(TAG, "u8g2_ClearBuffer");
     u8g2_ClearBuffer(&u8g2);
-    ESP_LOGI(TAG, "u8g2_DrawBox");
-    u8g2_DrawBox(&u8g2, 0, 26, 80, 6);
-    u8g2_DrawFrame(&u8g2, 0, 26, 100, 6);
+    // ESP_LOGI(TAG, "u8g2_DrawBox");
+    // u8g2_DrawBox(&u8g2, 0, 26, 80, 6);
+    // u8g2_DrawFrame(&u8g2, 0, 26, 100, 6);
+
+    ESP_LOGI(TAG, "u8g2_DrawBitmap");
+    u8g2_DrawBitmap(&u8g2, 0, 40, 128/8, 20, fredcorp_logo);
 
     ESP_LOGI(TAG, "u8g2_SetFont");
-    u8g2_SetFont(&u8g2, u8g2_font_ncenB14_tr);
+    u8g2_SetFont(&u8g2, u8g2_font_pxplusibmvga9_t_all);
     ESP_LOGI(TAG, "u8g2_DrawStr");
-    u8g2_DrawStr(&u8g2, 2, 17, "Hi nkolban!");
+    u8g2_DrawStr(&u8g2, 18, 30, "fredcorp.cc");
+
     ESP_LOGI(TAG, "u8g2_SendBuffer");
     u8g2_SendBuffer(&u8g2);
 
