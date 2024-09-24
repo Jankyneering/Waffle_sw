@@ -112,6 +112,7 @@ void vUITask(void *pvParameters) {
 
 void vTask1(void *pvParameters) {
     for (;;) {
+        ESP_LOGI(TAG_TASK1, "Task1 is running");
         printf("Task1 is running on core %d\n", xPortGetCoreID());
         print_chip_info();
         vTaskDelay(1000 / portTICK_PERIOD_MS);
@@ -120,6 +121,7 @@ void vTask1(void *pvParameters) {
 
 void vTask2(void *pvParameters) {
     for (;;) {
+        ESP_LOGI(TAG_TASK2, "Task2 is running");
         printf("Task2 is running on core %d\n", xPortGetCoreID());
         ledState = !ledState;
         gpio_set_level(LED, ledState);
@@ -137,20 +139,20 @@ void app_main() {
 
     xTaskCreate(vTask1,
                 "Task1",
-                1000,
+                2000,
                 NULL,
                 taskPriority,
                 NULL);
     xTaskCreate(vTask2,         // Entry function of the task
                 "Task2",        // Name of the task
-                1000,           // The number of words to allocate for use as the task's
+                2000,           // The number of words to allocate for use as the task's
                                 // stack (arbitrary size enough for this task)
                 NULL,           // No parameter passed to the task
                 taskPriority,   // Priority of the task
                 NULL);          // No handle
     xTaskCreate(vUITask,        // Entry function of the task
                 "UITask",       // Name of the task
-                20000,          // The number of words to allocate for use as the task's
+                100000,         // The number of words to allocate for use as the task's
                                 // stack (arbitrary size enough for this task)
                 NULL,           // No parameter passed to the task
                 UITaskPriority, // Priority of the task
