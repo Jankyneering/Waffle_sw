@@ -44,7 +44,7 @@ const char *model_info(esp_chip_model_t model)
     }
 }
 
-static const char *TAG = "ssd1306";
+static const char *TAG_OLED = "OLED";
 
 void task_test_SSD1306i2c(void *ignore) {
     u8g2_esp32_hal_t u8g2_esp32_hal = U8G2_ESP32_HAL_DEFAULT;
@@ -60,30 +60,30 @@ void task_test_SSD1306i2c(void *ignore) {
       u8g2_esp32_gpio_and_delay_cb);  // init u8g2 structure
     u8x8_SetI2CAddress(&u8g2.u8x8, 0x3c);
 
-    ESP_LOGI(TAG, "u8g2_InitDisplay");
+    ESP_LOGI(TAG_OLED, "u8g2_InitDisplay");
     u8g2_InitDisplay(&u8g2);  // send init sequence to the display, display is in
                             // sleep mode after this,
 
-    ESP_LOGI(TAG, "u8g2_SetPowerSave");
+    ESP_LOGI(TAG_OLED, "u8g2_SetPowerSave");
     u8g2_SetPowerSave(&u8g2, 0);  // wake up display
-    ESP_LOGI(TAG, "u8g2_ClearBuffer");
+    ESP_LOGI(TAG_OLED, "u8g2_ClearBuffer");
     u8g2_ClearBuffer(&u8g2);
-    // ESP_LOGI(TAG, "u8g2_DrawBox");
+    // ESP_LOGI(TAG_OLED, "u8g2_DrawBox");
     // u8g2_DrawBox(&u8g2, 0, 26, 80, 6);
     // u8g2_DrawFrame(&u8g2, 0, 26, 100, 6);
 
-    ESP_LOGI(TAG, "u8g2_DrawBitmap");
+    ESP_LOGI(TAG_OLED, "u8g2_DrawBitmap");
     u8g2_DrawBitmap(&u8g2, 0, 40, 128/8, 20, fredcorp_logo);
 
-    ESP_LOGI(TAG, "u8g2_SetFont");
+    ESP_LOGI(TAG_OLED, "u8g2_SetFont");
     u8g2_SetFont(&u8g2, u8g2_font_pxplusibmvga9_t_all);
-    ESP_LOGI(TAG, "u8g2_DrawStr");
+    ESP_LOGI(TAG_OLED, "u8g2_DrawStr");
     u8g2_DrawStr(&u8g2, 18, 30, "fredcorp.cc");
 
-    ESP_LOGI(TAG, "u8g2_SendBuffer");
+    ESP_LOGI(TAG_OLED, "u8g2_SendBuffer");
     u8g2_SendBuffer(&u8g2);
 
-    ESP_LOGI(TAG, "All done!");
+    ESP_LOGI(TAG_OLED, "All done!");
 
     vTaskDelete(NULL);
 }
@@ -128,7 +128,8 @@ void vTask2(void *pvParameters)
 void app_main()
 {
     gpio_set_direction(LED, GPIO_MODE_OUTPUT);
-
+    esp_log_level_set("TAG_OLED", ESP_LOG_INFO);
+    ESP_LOGI(TAG_OLED, "Starting...");
 
     xTaskCreate(vTask1,       // Entry function of the task
                 "Task1",      // Name of the task
