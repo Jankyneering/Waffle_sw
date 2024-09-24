@@ -3,3 +3,5 @@ private
 build
 *Log*
 *log*
+*Log.yaml
+waffle_platformio/build/CMakeFiles/CMakeConfigureLog.yaml
