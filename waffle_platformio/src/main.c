@@ -24,11 +24,12 @@
 
 static bool ledState = false;
 
-const UBaseType_t UITaskPriority = 1;
-const UBaseType_t taskPriority = 1;
+static const UBaseType_t UITaskPriority = 2;
+static const UBaseType_t taskPriority = 1;
 
 static const char *TAG_MAIN = "MAIN";
 static const char *TAG_SCREEN = "SCREEN";
+static const char *TAG_TASK1 = "TASK1";
 static const char *TAG_TASK2 = "TASK2";
 
 const char *model_info(esp_chip_model_t model) {
@@ -63,7 +64,6 @@ void print_chip_info() {
 }
 
 void vUITask(void *pvParameters) {
-    esp_log_level_set(TAG_SCREEN, ESP_LOG_INFO);
     ESP_LOGI(TAG_SCREEN, "Starting...");
 
     u8g2_esp32_hal_t u8g2_esp32_hal = U8G2_ESP32_HAL_DEFAULT;
@@ -86,34 +86,41 @@ void vUITask(void *pvParameters) {
     u8g2_InitDisplay(&u8g2); // send init sequence to the display, display
                              // is in sleep mode after this,
 
+    ESP_LOGI(TAG_SCREEN, "u8g2_SetPowerSave");
+    u8g2_SetPowerSave(&u8g2, 0); // wake up display
+    ESP_LOGI(TAG_SCREEN, "u8g2_ClearBuffer");
+    u8g2_ClearBuffer(&u8g2);
+    // ESP_LOGI(TAG_SCREEN, "u8g2_DrawBox");
+    // u8g2_DrawBox(&u8g2, 0, 26, 80, 6);
+    // u8g2_DrawFrame(&u8g2, 0, 26, 100, 6);
+
+    ESP_LOGI(TAG_SCREEN, "u8g2_DrawBitmap");
+    u8g2_DrawBitmap(&u8g2, 0, 40, 128 / 8, 20, fredcorp_logo);
+
+    ESP_LOGI(TAG_SCREEN, "u8g2_SetFont");
+    u8g2_SetFont(&u8g2, u8g2_font_pxplusibmvga9_t_all);
+    ESP_LOGI(TAG_SCREEN, "u8g2_DrawStr");
+    u8g2_DrawStr(&u8g2, 18, 30, "fredcorp.cc");
+
+    ESP_LOGI(TAG_SCREEN, "u8g2_SendBuffer");
+    u8g2_SendBuffer(&u8g2);
+
+    ESP_LOGI(TAG_SCREEN, "All done!");
+
+    vTaskDelete(NULL);
+}
+
+void vTask1(void *pvParameters) {
     for (;;) {
-
-        ESP_LOGI(TAG_SCREEN, "u8g2_SetPowerSave");
-        u8g2_SetPowerSave(&u8g2, 0); // wake up display
-        ESP_LOGI(TAG_SCREEN, "u8g2_ClearBuffer");
-        u8g2_ClearBuffer(&u8g2);
-        // ESP_LOGI(TAG_SCREEN, "u8g2_DrawBox");
-        // u8g2_DrawBox(&u8g2, 0, 26, 80, 6);
-        // u8g2_DrawFrame(&u8g2, 0, 26, 100, 6);
-
-        ESP_LOGI(TAG_SCREEN, "u8g2_DrawBitmap");
-        u8g2_DrawBitmap(&u8g2, 0, 40, 128 / 8, 20, fredcorp_logo);
-
-        ESP_LOGI(TAG_SCREEN, "u8g2_SetFont");
-        u8g2_SetFont(&u8g2, u8g2_font_pxplusibmvga9_t_all);
-        ESP_LOGI(TAG_SCREEN, "u8g2_DrawStr");
-        u8g2_DrawStr(&u8g2, 18, 30, "fredcorp.cc");
-
-        ESP_LOGI(TAG_SCREEN, "u8g2_SendBuffer");
-        u8g2_SendBuffer(&u8g2);
-
-        ESP_LOGI(TAG_SCREEN, "All done!");
+        printf("Task1 is running on core %d\n", xPortGetCoreID());
+        print_chip_info();
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 }
 
 void vTask2(void *pvParameters) {
     for (;;) {
-        ESP_LOGI(TAG_TASK2, "Task2 is running on core %d\n", xPortGetCoreID());
+        printf("Task2 is running on core %d\n", xPortGetCoreID());
         ledState = !ledState;
         gpio_set_level(LED, ledState);
         vTaskDelay(500 / portTICK_PERIOD_MS);
@@ -125,15 +132,15 @@ void app_main() {
 
     esp_log_level_set(TAG_MAIN, ESP_LOG_INFO);
     esp_log_level_set(TAG_SCREEN, ESP_LOG_INFO);
+    esp_log_level_set(TAG_TASK1, ESP_LOG_INFO);
     esp_log_level_set(TAG_TASK2, ESP_LOG_INFO);
 
-    xTaskCreate(vUITask,        // Entry function of the task
-                "UI Task",      // Name of the task
-                20000,          // The number of words to allocate for use as the task's
-                                // stack (arbitrary size enough for this task)
-                NULL,           // No parameter passed to the task
-                UITaskPriority, // Priority of the task
-                NULL);          // No handle
+    xTaskCreate(vTask1,
+                "Task1",
+                1000,
+                NULL,
+                taskPriority,
+                NULL);
     xTaskCreate(vTask2,         // Entry function of the task
                 "Task2",        // Name of the task
                 1000,           // The number of words to allocate for use as the task's
@@ -141,10 +148,17 @@ void app_main() {
                 NULL,           // No parameter passed to the task
                 taskPriority,   // Priority of the task
                 NULL);          // No handle
+    xTaskCreate(vUITask,        // Entry function of the task
+                "UITask",       // Name of the task
+                20000,          // The number of words to allocate for use as the task's
+                                // stack (arbitrary size enough for this task)
+                NULL,           // No parameter passed to the task
+                UITaskPriority, // Priority of the task
+                NULL);          // No handle
 
     for (;;) {
         // Display the core on which the main function is running
-        ESP_LOGI(TAG_MAIN, "app_main() is running on core %d\n", xPortGetCoreID());
+        printf("app_main() is running on core %d\n", xPortGetCoreID());
         // Wait 1 seconds
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
