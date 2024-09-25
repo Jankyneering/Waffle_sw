@@ -63,7 +63,7 @@ void print_chip_info() {
 
 void vUITask(void *pvParameters) {
     UIHandler uiHandler;
-    uiHandler.init(PIN_SDA, PIN_SCL);
+    uiHandler.init(PIN_SDA, PIN_SCL, "UI", ESP_LOG_INFO);
     uiHandler.splashScreen();
     vTaskDelete(NULL);
 }

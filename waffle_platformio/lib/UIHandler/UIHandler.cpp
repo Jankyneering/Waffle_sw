@@ -79,12 +79,11 @@ int UIHandler::splashScreen() {
     ESP_LOGI(TAG_UI, "Displaying splash screen");
     ESP_LOGI(TAG_UI, "u8g2_ClearBuffer");
     u8g2_ClearBuffer(&u8g2);
-    // ESP_LOGI(TAG_SCREEN, "u8g2_DrawBox");
-    // u8g2_DrawBox(&u8g2, 0, 26, 80, 6);
-    // u8g2_DrawFrame(&u8g2, 0, 26, 100, 6);
 
     ESP_LOGI(TAG_UI, "u8g2_DrawBitmap");
     u8g2_DrawBitmap(&u8g2, 0, 40, 128 / 8, 20, fredcorp_logo);
+    // ESP_LOGI(TAG_UI, "u8g2_DrawBitmap");
+    // u8g2_DrawBitmap(&u8g2, 32, 4, 8, 54, wednesday_logo);
 
     ESP_LOGI(TAG_UI, "u8g2_SetFont");
     u8g2_SetFont(&u8g2, u8g2_font_pxplusibmvga9_t_all);
@@ -94,7 +93,7 @@ int UIHandler::splashScreen() {
     ESP_LOGI(TAG_UI, "u8g2_SendBuffer");
     u8g2_SendBuffer(&u8g2);
 
-    ESP_LOGI(TAG_UI, "All done!");
+    // ESP_LOGI(TAG_UI, "All done!");
 
     return 0;
 }
