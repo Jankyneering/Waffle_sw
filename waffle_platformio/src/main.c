@@ -2,19 +2,13 @@
 #include "esp_chip_info.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "graphics.h"
 #include "sdkconfig.h"
-#include "u8g2.h"
-#include "u8g2_esp32_hal.h"
 #include <driver/i2c_master.h>
 #include <driver/spi_master.h>
 #include <esp_log.h>
 #include <stdio.h>
+#include "UIHandler.h"
 
-#define SSD1306
-// #define LCD
-#define SCREEN_WIDTH 128
-#define SCREEN_HEIGHT 64
 // SDA - GPIO21
 #define PIN_SDA 21
 // SCL - GPIO22
@@ -64,49 +58,9 @@ void print_chip_info() {
 }
 
 void vUITask(void *pvParameters) {
-    ESP_LOGI(TAG_SCREEN, "Starting...");
-
-    u8g2_esp32_hal_t u8g2_esp32_hal = U8G2_ESP32_HAL_DEFAULT;
-
-#ifdef SSD1306
-    u8g2_esp32_hal.bus.i2c.sda = PIN_SDA;
-    u8g2_esp32_hal.bus.i2c.scl = PIN_SCL;
-    u8g2_esp32_hal_init(u8g2_esp32_hal);
-
-    u8g2_t u8g2; // a structure which will contain all the data for one display
-    u8g2_Setup_ssd1306_i2c_128x64_noname_f(
-        &u8g2, U8G2_R0,
-        // u8x8_byte_sw_i2c,
-        u8g2_esp32_i2c_byte_cb,
-        u8g2_esp32_gpio_and_delay_cb); // init u8g2 structure
-    u8x8_SetI2CAddress(&u8g2.u8x8, 0x3c);
-#endif
-
-    ESP_LOGI(TAG_SCREEN, "u8g2_InitDisplay");
-    u8g2_InitDisplay(&u8g2); // send init sequence to the display, display
-                             // is in sleep mode after this,
-
-    ESP_LOGI(TAG_SCREEN, "u8g2_SetPowerSave");
-    u8g2_SetPowerSave(&u8g2, 0); // wake up display
-    ESP_LOGI(TAG_SCREEN, "u8g2_ClearBuffer");
-    u8g2_ClearBuffer(&u8g2);
-    // ESP_LOGI(TAG_SCREEN, "u8g2_DrawBox");
-    // u8g2_DrawBox(&u8g2, 0, 26, 80, 6);
-    // u8g2_DrawFrame(&u8g2, 0, 26, 100, 6);
-
-    ESP_LOGI(TAG_SCREEN, "u8g2_DrawBitmap");
-    u8g2_DrawBitmap(&u8g2, 0, 40, 128 / 8, 20, fredcorp_logo);
-
-    ESP_LOGI(TAG_SCREEN, "u8g2_SetFont");
-    u8g2_SetFont(&u8g2, u8g2_font_pxplusibmvga9_t_all);
-    ESP_LOGI(TAG_SCREEN, "u8g2_DrawStr");
-    u8g2_DrawStr(&u8g2, 18, 30, "fredcorp.cc");
-
-    ESP_LOGI(TAG_SCREEN, "u8g2_SendBuffer");
-    u8g2_SendBuffer(&u8g2);
-
-    ESP_LOGI(TAG_SCREEN, "All done!");
-
+    UIHandler uiHandler;
+    uiHandler.init(PIN_SDA, PIN_SCL, ESP_LOG_INFO);
+    uiHandler.splashScreen();
     vTaskDelete(NULL);
 }
 
