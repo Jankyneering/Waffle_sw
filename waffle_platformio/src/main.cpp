@@ -9,6 +9,8 @@
 #include <esp_log.h>
 #include <stdio.h>
 
+#define CALLSIGN "ON4PFD"
+
 // SDA - GPIO21
 #define PIN_SDA 21
 // SCL - GPIO22
@@ -62,14 +64,29 @@ void print_chip_info() {
 }
 
 void vUITask(void *pvParameters) {
-    UIHandler uiHandler;
+    UIHandler uiHandler(CALLSIGN);
     uiHandler.init(PIN_SDA, PIN_SCL, "UI", ESP_LOG_INFO);
     uiHandler.splashScreen();
     vTaskDelay(5000 / portTICK_PERIOD_MS);
     for (;;) {
+        uiHandler.setRSSI(0);
+        uiHandler.showMenu(0);
+        vTaskDelay(500 / portTICK_PERIOD_MS);
+        uiHandler.setRSSI(12);
+        uiHandler.showMenu(0);
+        vTaskDelay(500 / portTICK_PERIOD_MS);
+        uiHandler.setRSSI(42);
+        uiHandler.showMenu(0);
+        vTaskDelay(500 / portTICK_PERIOD_MS);
+        uiHandler.setRSSI(69);
+        uiHandler.showMenu(0);
+        vTaskDelay(500 / portTICK_PERIOD_MS);
+        uiHandler.setRSSI(100);
+        uiHandler.showMenu(0);
+        vTaskDelay(500 / portTICK_PERIOD_MS);
         for (int i = 0; i <= 3; i++) {
             uiHandler.showMenu(i);
-            vTaskDelay(2500 / portTICK_PERIOD_MS);
+            vTaskDelay(1500 / portTICK_PERIOD_MS);
         }
     }
     vTaskDelete(NULL);

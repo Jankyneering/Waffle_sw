@@ -23,13 +23,9 @@
 
 const int menuAmount = 3;
 
-// // list of menu items
-// std::list<MenuItem> menus;
-// std::list<SubMenu> subMenus;
 
-// u8g2_t u8g2; // a structure which will contain all the data for one display
-
-UIHandler::UIHandler() {
+UIHandler::UIHandler(char *callsign) {
+    _callsign = callsign;
 }
 
 int UIHandler::init(int PIN_SDA, int PIN_SCL, char *TAG = "UI", esp_log_level_t LOG_LEVEL = ESP_LOG_INFO) {
@@ -98,7 +94,7 @@ int UIHandler::splashScreen() {
     ESP_LOGI(TAG_UI, "u8g2_DrawStr");
     u8g2_DrawStr(&u8g2, 72, 16, "Waffle");
     u8g2_DrawStr(&u8g2, 72, 28, "POGSAG");
-    u8g2_DrawStr(&u8g2, 72, 44, "ON4PFD");
+    u8g2_DrawStr(&u8g2, 72, 44, _callsign);
     char resetReason[32];
     esp_reset_reason_t reset_reason = esp_reset_reason();
     ESP_LOGI(TAG_UI, "Reset reason: %d", reset_reason);
@@ -163,6 +159,48 @@ int UIHandler::splashScreen() {
     return 0;
 }
 
+void UIHandler::setRSSI(int rssi) {
+    _rssi = rssi;
+}
+
+void UIHandler::drawRSSIbars(u8g2_t _u8g2, u8g2_uint_t x, u8g2_uint_t y, int rssi) {
+    switch(rssi) {
+    case 0:
+        u8g2_DrawBox(&_u8g2, x, y+8, 3, 1);
+        u8g2_DrawBox(&_u8g2, x+4, y+8, 3, 1);
+        u8g2_DrawBox(&_u8g2, x+8, y+8, 3, 1);
+        u8g2_DrawBox(&_u8g2, x+12, y+8, 3, 1);
+        break;
+    case 1 ... 24:
+        u8g2_DrawBox(&_u8g2, x, y+8, 3, 1);
+        u8g2_DrawBox(&_u8g2, x+4, y+8, 3, 1);
+        u8g2_DrawBox(&_u8g2, x+8, y+8, 3, 1);
+        u8g2_DrawBox(&_u8g2, x+12, y+6, 3, 3);
+        break;
+    case 25 ... 49:
+        u8g2_DrawBox(&_u8g2, x, y+8, 3, 1);
+        u8g2_DrawBox(&_u8g2, x+4, y+8, 3, 1);
+        u8g2_DrawBox(&_u8g2, x+8, y+4, 3, 5);
+        u8g2_DrawBox(&_u8g2, x+12, y+6, 3, 3);
+        break;
+    case 50 ... 74:
+        u8g2_DrawBox(&_u8g2, x, y+8, 3, 1);
+        u8g2_DrawBox(&_u8g2, x+4, y+2, 3, 7);
+        u8g2_DrawBox(&_u8g2, x+8, y+4, 3, 5);
+        u8g2_DrawBox(&_u8g2, x+12, y+6, 3, 3);
+        break;
+    case 75 ... 100:
+        u8g2_DrawBox(&_u8g2, x, y, 3, 9);
+        u8g2_DrawBox(&_u8g2, x+4, y+2, 3, 7);
+        u8g2_DrawBox(&_u8g2, x+8, y+4, 3, 5);
+        u8g2_DrawBox(&_u8g2, x+12, y+6, 3, 3);
+        break;
+    default:
+        ESP_LOGW(TAG_UI, "RSSI draw failed");
+        break;
+    }
+}
+
 int UIHandler::showMenu(int menu) {
     ESP_LOGI(TAG_UI, "Displaying menu %d", menu);
     u8g2_ClearBuffer(&u8g2);
@@ -170,11 +208,12 @@ int UIHandler::showMenu(int menu) {
     u8g2_DrawLine(&u8g2, 0, 12, 127, 12);
     switch (menu) {
     case 0:
-        ESP_LOGI(TAG_UI, "Menu 0");
+        ESP_LOGI(TAG_UI, "main");
         u8g2_SetFont(&u8g2, u8g2_font_6x13_mf);
-        u8g2_DrawStr(&u8g2, 0, 10, "Menu 0");
+        u8g2_DrawStr(&u8g2, 0, 10, _callsign);
         u8g2_SetFont(&u8g2, u8g2_font_inb16_mf);
-        u8g2_DrawStr(&u8g2, 0, 40, "Item 0");
+        u8g2_DrawStr(&u8g2, 0, 40, "Hii UwU");
+        drawRSSIbars(u8g2, 110, 1, _rssi);
         break;
     case 1:
         ESP_LOGI(TAG_UI, "Menu 1");
