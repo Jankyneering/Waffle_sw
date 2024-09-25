@@ -37,6 +37,7 @@ int UIHandler::init(int PIN_SDA, int PIN_SCL, char *TAG = "UI", esp_log_level_t 
 #ifdef SSD1306
     u8g2_esp32_hal.bus.i2c.sda = (gpio_num_t)PIN_SDA;
     u8g2_esp32_hal.bus.i2c.scl = (gpio_num_t)PIN_SCL;
+    u8g2_esp32_hal.clk_speed = 400000;
     u8g2_esp32_hal_init(u8g2_esp32_hal);
 
     u8g2_Setup_ssd1306_i2c_128x64_noname_f(
