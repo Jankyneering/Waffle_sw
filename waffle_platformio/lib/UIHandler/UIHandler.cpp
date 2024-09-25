@@ -4,14 +4,14 @@
 
 // #include <list>
 
+#include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "sdkconfig.h"
-#include <stdio.h>
-#include <string.h>
-#include "esp_log.h"
 #include "u8g2.h"
 #include "u8g2_esp32_hal.h"
+#include <stdio.h>
+#include <string.h>
 
 #include "UIHandler.h"
 #include "graphics.h"
@@ -21,14 +21,15 @@
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
 
+const int menuAmount = 3;
+
 // // list of menu items
 // std::list<MenuItem> menus;
 // std::list<SubMenu> subMenus;
 
 // u8g2_t u8g2; // a structure which will contain all the data for one display
 
-UIHandler::UIHandler(){
-    
+UIHandler::UIHandler() {
 }
 
 int UIHandler::init(int PIN_SDA, int PIN_SCL, char *TAG = "UI", esp_log_level_t LOG_LEVEL = ESP_LOG_INFO) {
@@ -65,7 +66,7 @@ int UIHandler::sleep() {
 }
 
 int UIHandler::wake() {
-    //ESP_LOGI(TAG_UI, "Waking display");
+    // ESP_LOGI(TAG_UI, "Waking display");
     u8g2_SetPowerSave(&u8g2, 0);
     return 0;
 }
@@ -80,15 +81,79 @@ int UIHandler::splashScreen() {
     ESP_LOGI(TAG_UI, "u8g2_ClearBuffer");
     u8g2_ClearBuffer(&u8g2);
 
-    ESP_LOGI(TAG_UI, "u8g2_DrawBitmap");
-    u8g2_DrawBitmap(&u8g2, 0, 40, 128 / 8, 20, fredcorp_logo);
+    // ESP_LOGI(TAG_UI, "u8g2_DrawBitmap");
+    // u8g2_DrawBitmap(&u8g2, 0, 40, 128 / 8, 20, fredcorp_logo);
     // ESP_LOGI(TAG_UI, "u8g2_DrawBitmap");
     // u8g2_DrawBitmap(&u8g2, 32, 4, 8, 54, wednesday_logo);
 
+    // ESP_LOGI(TAG_UI, "u8g2_SetFont");
+    // u8g2_SetFont(&u8g2, u8g2_font_pxplusibmvga9_t_all);
+    // ESP_LOGI(TAG_UI, "u8g2_DrawStr");
+    // u8g2_DrawStr(&u8g2, 18, 30, "fredcorp.cc");
+
+    ESP_LOGI(TAG_UI, "u8g2_DrawBitmap");
+    u8g2_DrawBitmap(&u8g2, 0, 5, 8, 54, wednesday_logo);
     ESP_LOGI(TAG_UI, "u8g2_SetFont");
-    u8g2_SetFont(&u8g2, u8g2_font_pxplusibmvga9_t_all);
+    u8g2_SetFont(&u8g2, u8g2_font_6x13_mf);
     ESP_LOGI(TAG_UI, "u8g2_DrawStr");
-    u8g2_DrawStr(&u8g2, 18, 30, "fredcorp.cc");
+    u8g2_DrawStr(&u8g2, 72, 16, "Waffle");
+    u8g2_DrawStr(&u8g2, 72, 28, "POGSAG");
+    u8g2_DrawStr(&u8g2, 72, 44, "ON4PFD");
+    char resetReason[32];
+    esp_reset_reason_t reset_reason = esp_reset_reason();
+    ESP_LOGI(TAG_UI, "Reset reason: %d", reset_reason);
+    switch (reset_reason) {
+    case ESP_RST_UNKNOWN:
+        strcpy(resetReason, "Unknown");
+        break;
+    case ESP_RST_POWERON:
+        strcpy(resetReason, "Power on");
+        break;
+    case ESP_RST_EXT:
+        strcpy(resetReason, "External");
+        break;
+    case ESP_RST_SW:
+        strcpy(resetReason, "Software");
+        break;
+    case ESP_RST_PANIC:
+        strcpy(resetReason, "Panic");
+        break;
+    case ESP_RST_INT_WDT:
+        strcpy(resetReason, "Watchdog");
+        break;
+    case ESP_RST_TASK_WDT:
+        strcpy(resetReason, "TWatchdog");
+        break;
+    case ESP_RST_WDT:
+        strcpy(resetReason, "Watchdog");
+        break;
+    case ESP_RST_DEEPSLEEP:
+        strcpy(resetReason, "Deep sleep");
+        break;
+    case ESP_RST_BROWNOUT:
+        strcpy(resetReason, "Brownout");
+        break;
+    case ESP_RST_SDIO:
+        strcpy(resetReason, "SDIO");
+        break;
+    case ESP_RST_JTAG:
+        strcpy(resetReason, "JTAG");
+        break;
+    case ESP_RST_USB:
+        strcpy(resetReason, "USB");
+        break;
+    case ESP_RST_EFUSE:
+        strcpy(resetReason, "EFUSE");
+        break;
+    case ESP_RST_PWR_GLITCH:
+        strcpy(resetReason, "Power glitch");
+        break;
+    case ESP_RST_CPU_LOCKUP:
+        strcpy(resetReason, "CPU lockup");
+        break;
+    }
+
+    u8g2_DrawStr(&u8g2, 72, 56, resetReason);
 
     ESP_LOGI(TAG_UI, "u8g2_SendBuffer");
     u8g2_SendBuffer(&u8g2);
@@ -98,42 +163,45 @@ int UIHandler::splashScreen() {
     return 0;
 }
 
-int UIHandler::addMenu(int id, const char *name) {
-    ESP_LOGI(TAG_UI, "Adding menu item %d: %s", id, name);
-    return 0;
-}
+int UIHandler::showMenu(int menu) {
+    ESP_LOGI(TAG_UI, "Displaying menu %d", menu);
+    u8g2_ClearBuffer(&u8g2);
 
-int UIHandler::removeMenu(int id) {
-    ESP_LOGI(TAG_UI, "Removing menu item %d", id);
-    return 0;
-}
+    u8g2_DrawLine(&u8g2, 0, 12, 127, 12);
+    switch (menu) {
+    case 0:
+        ESP_LOGI(TAG_UI, "Menu 0");
+        u8g2_SetFont(&u8g2, u8g2_font_6x13_mf);
+        u8g2_DrawStr(&u8g2, 0, 10, "Menu 0");
+        u8g2_SetFont(&u8g2, u8g2_font_inb16_mf);
+        u8g2_DrawStr(&u8g2, 0, 40, "Item 0");
+        break;
+    case 1:
+        ESP_LOGI(TAG_UI, "Menu 1");
+        u8g2_SetFont(&u8g2, u8g2_font_6x13_mf);
+        u8g2_DrawStr(&u8g2, 0, 10, "Menu 1");
+        u8g2_SetFont(&u8g2, u8g2_font_inb16_mf);
+        u8g2_DrawStr(&u8g2, 0, 40, "Item 1");
+        break;
+    case 2:
+        ESP_LOGI(TAG_UI, "Menu 2");
+        u8g2_SetFont(&u8g2, u8g2_font_6x13_mf);
+        u8g2_DrawStr(&u8g2, 0, 10, "Menu 2");
+        u8g2_SetFont(&u8g2, u8g2_font_inb16_mf);
+        u8g2_DrawStr(&u8g2, 0, 40, "Item 2");
+        break;
+    case 3:
+        ESP_LOGI(TAG_UI, "Menu 3");
+        u8g2_SetFont(&u8g2, u8g2_font_6x13_mf);
+        u8g2_DrawStr(&u8g2, 0, 10, "Menu 3");
+        u8g2_SetFont(&u8g2, u8g2_font_inb16_mf);
+        u8g2_DrawStr(&u8g2, 0, 40, "Item 3");
+        break;
+    default:
+        ESP_LOGI(TAG_UI, "Unknown menu");
+        break;
+    }
 
-int UIHandler::selectMenu(int id) {
-    ESP_LOGI(TAG_UI, "Selecting menu item %d", id);
-    return 0;
-}
-
-int UIHandler::addMenuAction(int id, void (*action)(void)) {
-    ESP_LOGI(TAG_UI, "Adding action to menu item %d", id);
-    return 0;
-}
-
-int UIHandler::addSubMenu(int menuId, int id, const char *name) {
-    ESP_LOGI(TAG_UI, "Adding sub menu %d to menu %d: %s", id, menuId, name);
-    return 0;
-}
-
-int UIHandler::removeSubMenu(int menuId, int id) {
-    ESP_LOGI(TAG_UI, "Removing sub menu %d from menu %d", id, menuId);
-    return 0;
-}
-
-int UIHandler::selectSubMenu(int menuId, int id) {
-    ESP_LOGI(TAG_UI, "Selecting sub menu %d from menu %d", id, menuId);
-    return 0;
-}
-
-int UIHandler::addSubMenuAction(int menuId, int id, void (*action)(void)) {
-    ESP_LOGI(TAG_UI, "Adding action to sub menu %d from menu %d", id, menuId);
+    u8g2_SendBuffer(&u8g2);
     return 0;
 }

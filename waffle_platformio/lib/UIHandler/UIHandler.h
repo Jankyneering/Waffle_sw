@@ -9,19 +9,7 @@
 #include "u8g2.h"
 #include <stdio.h>
 #include <string.h>
-// #include <list>
-
-typedef struct Menu {
-    int id;
-    const char *name;
-    void (*action)(void);
-} MenuItem;
-
-typedef struct SubMenu {
-    int id;
-    const char *name;
-    void (*action)(void);
-} SubMenu;
+#include <list>
 
 
 class UIHandler {
@@ -33,21 +21,9 @@ public:
     int redraw();
 
     int splashScreen();
-
-    int addMenu(int id, const char *name);
-    int removeMenu(int id);
-    int selectMenu(int id);
-    int addMenuAction(int id, void (*action)(void));
-
-    int addSubMenu(int menuId, int id, const char *name);
-    int removeSubMenu(int menuId, int id);
-    int selectSubMenu(int menuId, int id);
-    int addSubMenuAction(int menuId, int id, void (*action)(void));
+    int showMenu(int menu);
 
 private:
-    // std::list<MenuItem> menus;
-    // std::list<SubMenu> subMenus;
-
     u8g2_t u8g2; // a structure which will contain all the data for one display
     char *TAG_UI;
 };
