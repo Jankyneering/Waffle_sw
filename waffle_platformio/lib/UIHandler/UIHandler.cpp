@@ -69,6 +69,7 @@ int UIHandler::wake() {
 
 int UIHandler::redraw() {
     ESP_LOGI(TAG_UI, "Redrawing UI");
+    showMenu(_menu);
     return 0;
 }
 
@@ -161,6 +162,7 @@ int UIHandler::splashScreen() {
 
 void UIHandler::setRSSI(int rssi) {
     _rssi = rssi;
+    redraw();
 }
 
 void UIHandler::drawRSSIbars(u8g2_t _u8g2, u8g2_uint_t x, u8g2_uint_t y, int rssi) {
@@ -202,11 +204,12 @@ void UIHandler::drawRSSIbars(u8g2_t _u8g2, u8g2_uint_t x, u8g2_uint_t y, int rss
 }
 
 int UIHandler::showMenu(int menu) {
-    ESP_LOGI(TAG_UI, "Displaying menu %d", menu);
+    _menu = menu;
+    ESP_LOGI(TAG_UI, "Displaying menu %d", _menu);
     u8g2_ClearBuffer(&u8g2);
 
     u8g2_DrawLine(&u8g2, 0, 12, 127, 12);
-    switch (menu) {
+    switch (_menu) {
     case 0:
         ESP_LOGI(TAG_UI, "main");
         u8g2_SetFont(&u8g2, u8g2_font_6x13_mf);

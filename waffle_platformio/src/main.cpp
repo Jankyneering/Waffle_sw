@@ -70,19 +70,14 @@ void vUITask(void *pvParameters) {
     vTaskDelay(5000 / portTICK_PERIOD_MS);
     for (;;) {
         uiHandler.setRSSI(0);
-        uiHandler.showMenu(0);
         vTaskDelay(500 / portTICK_PERIOD_MS);
         uiHandler.setRSSI(12);
-        uiHandler.showMenu(0);
         vTaskDelay(500 / portTICK_PERIOD_MS);
         uiHandler.setRSSI(42);
-        uiHandler.showMenu(0);
         vTaskDelay(500 / portTICK_PERIOD_MS);
         uiHandler.setRSSI(69);
-        uiHandler.showMenu(0);
         vTaskDelay(500 / portTICK_PERIOD_MS);
         uiHandler.setRSSI(100);
-        uiHandler.showMenu(0);
         vTaskDelay(500 / portTICK_PERIOD_MS);
         for (int i = 0; i <= 3; i++) {
             uiHandler.showMenu(i);

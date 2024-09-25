@@ -28,6 +28,7 @@ private:
     char *_callsign; // Pointer to a character array (string)
     u8g2_t u8g2; // a structure which will contain all the data for one display
     char *TAG_UI;
+    int _menu;
     void drawRSSIbars(u8g2_t _u8g2, u8g2_uint_t x, u8g2_uint_t y, int rssi);
     int _rssi = 0;
 };
