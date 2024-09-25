@@ -23,6 +23,7 @@ public:
     int splashScreen();
     int showMenu(int menu);
     void setRSSI(int rssi);
+    void setNewMessage(bool newMessage);
 
 private:
     char *_callsign; // Pointer to a character array (string)
@@ -31,6 +32,7 @@ private:
     int _menu;
     void drawRSSIbars(u8g2_t _u8g2, u8g2_uint_t x, u8g2_uint_t y, int rssi);
     int _rssi = 0;
+    bool _newMessage = 0;
 };
 
 #endif

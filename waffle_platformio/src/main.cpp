@@ -69,6 +69,7 @@ void vUITask(void *pvParameters) {
     uiHandler.splashScreen();
     vTaskDelay(5000 / portTICK_PERIOD_MS);
     for (;;) {
+        uiHandler.showMenu(0);
         uiHandler.setRSSI(0);
         vTaskDelay(500 / portTICK_PERIOD_MS);
         uiHandler.setRSSI(12);
@@ -79,10 +80,12 @@ void vUITask(void *pvParameters) {
         vTaskDelay(500 / portTICK_PERIOD_MS);
         uiHandler.setRSSI(100);
         vTaskDelay(500 / portTICK_PERIOD_MS);
+        uiHandler.setNewMessage(true);
         for (int i = 0; i <= 3; i++) {
             uiHandler.showMenu(i);
             vTaskDelay(1500 / portTICK_PERIOD_MS);
         }
+        uiHandler.setNewMessage(false);
     }
     vTaskDelete(NULL);
 }

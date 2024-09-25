@@ -165,6 +165,11 @@ void UIHandler::setRSSI(int rssi) {
     redraw();
 }
 
+void UIHandler::setNewMessage(bool newMessage) {
+    _newMessage = newMessage;
+    redraw();
+}
+
 void UIHandler::drawRSSIbars(u8g2_t _u8g2, u8g2_uint_t x, u8g2_uint_t y, int rssi) {
     switch(rssi) {
     case 0:
@@ -209,6 +214,11 @@ int UIHandler::showMenu(int menu) {
     u8g2_ClearBuffer(&u8g2);
 
     u8g2_DrawLine(&u8g2, 0, 12, 127, 12);
+    if (_newMessage) {
+        u8g2_DrawBitmap(&u8g2, 94, 1, 2, 9, envelope);
+    }
+    drawRSSIbars(u8g2, 110, 1, _rssi);
+
     switch (_menu) {
     case 0:
         ESP_LOGI(TAG_UI, "main");
@@ -216,7 +226,6 @@ int UIHandler::showMenu(int menu) {
         u8g2_DrawStr(&u8g2, 0, 10, _callsign);
         u8g2_SetFont(&u8g2, u8g2_font_inb16_mf);
         u8g2_DrawStr(&u8g2, 0, 40, "Hii UwU");
-        drawRSSIbars(u8g2, 110, 1, _rssi);
         break;
     case 1:
         ESP_LOGI(TAG_UI, "Menu 1");
