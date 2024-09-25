@@ -16,6 +16,10 @@
 
 #define LED GPIO_NUM_25
 
+extern "C" {
+    void app_main(void);
+}
+
 static bool ledState = false;
 
 static const UBaseType_t UITaskPriority = 2;
