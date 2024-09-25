@@ -21,8 +21,6 @@
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
 
-const char *TAG_UI = "UI";
-
 // // list of menu items
 // std::list<MenuItem> menus;
 // std::list<SubMenu> subMenus;
@@ -33,7 +31,8 @@ UIHandler::UIHandler(){
     
 }
 
-int UIHandler::init(int PIN_SDA, int PIN_SCL, esp_log_level_t LOG_LEVEL = ESP_LOG_INFO) {
+int UIHandler::init(int PIN_SDA, int PIN_SCL, char *TAG = "UI", esp_log_level_t LOG_LEVEL = ESP_LOG_INFO) {
+    TAG_UI = TAG;
     esp_log_level_set(TAG_UI, LOG_LEVEL);
     ESP_LOGI(TAG_UI, "Initializing UIHandler");
     u8g2_esp32_hal_t u8g2_esp32_hal = U8G2_ESP32_HAL_DEFAULT;
@@ -66,7 +65,7 @@ int UIHandler::sleep() {
 }
 
 int UIHandler::wake() {
-    ESP_LOGI(TAG_UI, "Waking display");
+    //ESP_LOGI(TAG_UI, "Waking display");
     u8g2_SetPowerSave(&u8g2, 0);
     return 0;
 }

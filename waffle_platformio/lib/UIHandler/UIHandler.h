@@ -27,7 +27,7 @@ typedef struct SubMenu {
 class UIHandler {
 public:
     UIHandler();
-    int init(int PIN_SDA, int PIN_SCL, esp_log_level_t LOG_LEVEL);
+    int init(int PIN_SDA, int PIN_SCL, char *TAG, esp_log_level_t LOG_LEVEL);
     int sleep();
     int wake();
     int redraw();
@@ -45,11 +45,11 @@ public:
     int addSubMenuAction(int menuId, int id, void (*action)(void));
 
 private:
-    static const char *TAG_UI;
     // std::list<MenuItem> menus;
     // std::list<SubMenu> subMenus;
 
     u8g2_t u8g2; // a structure which will contain all the data for one display
+    char *TAG_UI;
 };
 
 #endif
