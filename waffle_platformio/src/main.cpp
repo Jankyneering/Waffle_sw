@@ -9,14 +9,11 @@
 #include <esp_log.h>
 #include <stdio.h>
 
+#include "radioHandler.h"
+
+#include "periph.h"
+
 #define CALLSIGN "ON4PFD"
-
-// SDA - GPIO21
-#define PIN_SDA 21
-// SCL - GPIO22
-#define PIN_SCL 22
-
-#define LED GPIO_NUM_25
 
 extern "C" {
 void app_main(void);
@@ -31,6 +28,7 @@ static const char *TAG_MAIN = "MAIN";
 static const char *TAG_SCREEN = "SCREEN";
 static const char *TAG_TASK1 = "TASK1";
 static const char *TAG_TASK2 = "TASK2";
+static const char *TAG_RADIO = "RADIO";
 
 const char *model_info(esp_chip_model_t model) {
     switch (model) {
@@ -67,6 +65,7 @@ void vUITask(void *pvParameters) {
     UIHandler uiHandler(CALLSIGN);
     uiHandler.init(PIN_SDA, PIN_SCL, "UI", ESP_LOG_INFO);
     uiHandler.splashScreen();
+
     vTaskDelay(5000 / portTICK_PERIOD_MS);
     for (;;) {
         uiHandler.showMenu(0);
@@ -100,6 +99,14 @@ void vTask1(void *pvParameters) {
 }
 
 void vTask2(void *pvParameters) {
+    // Variables for radio
+    float offset = 0.0035;       // device specific, in MHz. See README.md for more information on the matter.
+    float frequency = 439.98750; // Operational frequency
+
+    radioHandler sxradio;
+    sxradio.pocsagInit(frequency, offset, "RADIO");
+    sxradio.pocsagSendText(100, "TEST");
+
     for (;;) {
         ESP_LOGI(TAG_TASK2, "Task2 is running");
         ESP_LOGI(TAG_TASK2, "Task2 is running on core %d\n", xPortGetCoreID());
@@ -112,10 +119,11 @@ void vTask2(void *pvParameters) {
 void app_main() {
     gpio_set_direction(LED, GPIO_MODE_OUTPUT);
 
-    esp_log_level_set(TAG_MAIN, ESP_LOG_INFO);
-    esp_log_level_set(TAG_SCREEN, ESP_LOG_INFO);
-    esp_log_level_set(TAG_TASK1, ESP_LOG_INFO);
-    esp_log_level_set(TAG_TASK2, ESP_LOG_INFO);
+    esp_log_level_set(TAG_MAIN, ESP_LOG_WARN);
+    esp_log_level_set(TAG_SCREEN, ESP_LOG_WARN);
+    esp_log_level_set(TAG_TASK1, ESP_LOG_WARN);
+    esp_log_level_set(TAG_TASK2, ESP_LOG_WARN);
+    esp_log_level_set(TAG_RADIO, ESP_LOG_INFO);
 
     xTaskCreate(vTask1,
                 "Task1",
