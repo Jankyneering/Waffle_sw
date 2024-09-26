@@ -216,7 +216,7 @@ int UIHandler::showMenu(int menu) {
 
     u8g2_DrawLine(&u8g2, 0, 12, 127, 12);
     if (_newMessage) {
-        u8g2_DrawBitmap(&u8g2, 94, 1, 2, 9, envelope);
+        u8g2_DrawBitmap(&u8g2, 94, 2, 2, 7, envelope);
     }
     drawRSSIbars(u8g2, 110, 1, _rssi);
 
