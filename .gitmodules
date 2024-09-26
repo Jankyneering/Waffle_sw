@@ -1,3 +1,4 @@
-[submodule "waffle_platformio/components/u8g2"]
+[submodule "U8g2lib"]
 	path = waffle_platformio/components/u8g2
-	url = https://github.com/olikraus/u8g2.git
+	url = git@github.com:olikraus/u8g2.git
+
