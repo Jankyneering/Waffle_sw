@@ -1,3 +1,4 @@
+#include "UIHandler.h"
 #include "driver/gpio.h"
 #include "esp_chip_info.h"
 #include "freertos/FreeRTOS.h"
@@ -7,7 +8,8 @@
 #include <driver/spi_master.h>
 #include <esp_log.h>
 #include <stdio.h>
-#include "UIHandler.h"
+
+#define CALLSIGN "ON4PFD"
 
 // SDA - GPIO21
 #define PIN_SDA 21
@@ -17,7 +19,7 @@
 #define LED GPIO_NUM_25
 
 extern "C" {
-    void app_main(void);
+void app_main(void);
 }
 
 static bool ledState = false;
@@ -52,26 +54,46 @@ const char *model_info(esp_chip_model_t model) {
 void print_chip_info() {
     esp_chip_info_t chip_info;
     esp_chip_info(&chip_info);
-    printf("Chip model %s with %d CPU core(s), WiFi%s%s, ",
-           model_info(chip_info.model), chip_info.cores,
-           (chip_info.features & CHIP_FEATURE_BT) ? "/BT" : "",
-           (chip_info.features & CHIP_FEATURE_BLE) ? "/BLE" : "");
+    ESP_LOGI(TAG_TASK1, "Chip model %s with %d CPU core(s), WiFi%s%s, ",
+             model_info(chip_info.model), chip_info.cores,
+             (chip_info.features & CHIP_FEATURE_BT) ? "/BT" : "",
+             (chip_info.features & CHIP_FEATURE_BLE) ? "/BLE" : "");
     unsigned major_rev = chip_info.revision / 100;
     unsigned minor_rev = chip_info.revision % 100;
-    printf("silicon revision v%d.%d\n", major_rev, minor_rev);
+    ESP_LOGI(TAG_TASK1, "silicon revision v%d.%d\n", major_rev, minor_rev);
 }
 
 void vUITask(void *pvParameters) {
-    UIHandler uiHandler;
-    uiHandler.init(PIN_SDA, PIN_SCL);
+    UIHandler uiHandler(CALLSIGN);
+    uiHandler.init(PIN_SDA, PIN_SCL, "UI", ESP_LOG_INFO);
     uiHandler.splashScreen();
+    vTaskDelay(5000 / portTICK_PERIOD_MS);
+    for (;;) {
+        uiHandler.showMenu(0);
+        uiHandler.setRSSI(0);
+        vTaskDelay(500 / portTICK_PERIOD_MS);
+        uiHandler.setRSSI(12);
+        vTaskDelay(500 / portTICK_PERIOD_MS);
+        uiHandler.setRSSI(42);
+        vTaskDelay(500 / portTICK_PERIOD_MS);
+        uiHandler.setRSSI(69);
+        vTaskDelay(500 / portTICK_PERIOD_MS);
+        uiHandler.setRSSI(100);
+        vTaskDelay(500 / portTICK_PERIOD_MS);
+        uiHandler.setNewMessage(true);
+        for (int i = 0; i <= 3; i++) {
+            uiHandler.showMenu(i);
+            vTaskDelay(1500 / portTICK_PERIOD_MS);
+        }
+        uiHandler.setNewMessage(false);
+    }
     vTaskDelete(NULL);
 }
 
 void vTask1(void *pvParameters) {
     for (;;) {
         ESP_LOGI(TAG_TASK1, "Task1 is running");
-        printf("Task1 is running on core %d\n", xPortGetCoreID());
+        ESP_LOGI(TAG_TASK1, "Task1 is running on core %d\n", xPortGetCoreID());
         print_chip_info();
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
@@ -80,7 +102,7 @@ void vTask1(void *pvParameters) {
 void vTask2(void *pvParameters) {
     for (;;) {
         ESP_LOGI(TAG_TASK2, "Task2 is running");
-        printf("Task2 is running on core %d\n", xPortGetCoreID());
+        ESP_LOGI(TAG_TASK2, "Task2 is running on core %d\n", xPortGetCoreID());
         ledState = !ledState;
         gpio_set_level(LED, ledState);
         vTaskDelay(500 / portTICK_PERIOD_MS);
@@ -97,13 +119,13 @@ void app_main() {
 
     xTaskCreate(vTask1,
                 "Task1",
-                2000,
+                5000,
                 NULL,
                 taskPriority,
                 NULL);
     xTaskCreate(vTask2,         // Entry function of the task
                 "Task2",        // Name of the task
-                2000,           // The number of words to allocate for use as the task's
+                5000,           // The number of words to allocate for use as the task's
                                 // stack (arbitrary size enough for this task)
                 NULL,           // No parameter passed to the task
                 taskPriority,   // Priority of the task
@@ -118,7 +140,7 @@ void app_main() {
 
     for (;;) {
         // Display the core on which the main function is running
-        printf("app_main() is running on core %d\n", xPortGetCoreID());
+        ESP_LOGI(TAG_MAIN, "app_main() is running on core %d\n", xPortGetCoreID());
         // Wait 1 seconds
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
