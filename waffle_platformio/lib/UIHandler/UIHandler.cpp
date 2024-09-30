@@ -24,11 +24,13 @@
 const int menuAmount = 3;
 
 
-UIHandler::UIHandler(char *callsign) {
-    _callsign = callsign;
+UIHandler::UIHandler(int PIN_SDA, int PIN_SCL) {
+    _PIN_SDA = PIN_SDA;
+    _PIN_SCL = PIN_SCL;
 }
 
-int UIHandler::init(int PIN_SDA, int PIN_SCL, const char *TAG = "UI", esp_log_level_t LOG_LEVEL = ESP_LOG_INFO) {
+int UIHandler::init(char *callsign, const char *TAG = "UI", esp_log_level_t LOG_LEVEL = ESP_LOG_INFO) {
+    _callsign = callsign;
     TAG_UI = TAG;
     _LOG_LEVEL = LOG_LEVEL;
     esp_log_level_set(TAG_UI, _LOG_LEVEL);
@@ -36,8 +38,8 @@ int UIHandler::init(int PIN_SDA, int PIN_SCL, const char *TAG = "UI", esp_log_le
     u8g2_esp32_hal_t u8g2_esp32_hal = U8G2_ESP32_HAL_DEFAULT;
 
 #ifdef SSD1306
-    u8g2_esp32_hal.bus.i2c.sda = (gpio_num_t)PIN_SDA;
-    u8g2_esp32_hal.bus.i2c.scl = (gpio_num_t)PIN_SCL;
+    u8g2_esp32_hal.bus.i2c.sda = (gpio_num_t)_PIN_SDA;
+    u8g2_esp32_hal.bus.i2c.scl = (gpio_num_t)_PIN_SCL;
     u8g2_esp32_hal.clk_speed = 400000;
     u8g2_esp32_hal_init(u8g2_esp32_hal);
 

@@ -23,10 +23,13 @@ static const UBaseType_t UITaskPriority = 2;
 static const UBaseType_t taskPriority = 1;
 
 static const char *TAG_MAIN = "MAIN";
-static const char *TAG_UI = "UI";
+static const char *TAG_UI = "UI_Handler";
 static const char *TAG_TASK1 = "TASK1";
 static const char *TAG_TASK2 = "TASK2";
 static const char *TAG_RADIO = "RADIO";
+
+UIHandler uiHandler(PIN_SDA, PIN_SCL);
+radioHandler sxradio(LORA_SCK, LORA_MISO, LORA_MOSI, LORA_SS, LORA_DIO0, LORA_DIO1, LORA_DIO2, LORA_RST);
 
 const char *model_info(esp_chip_model_t model) {
     switch (model) {
@@ -60,8 +63,6 @@ void print_chip_info() {
 }
 
 void vUITask(void *pvParameters) {
-    UIHandler uiHandler(CALLSIGN);
-    uiHandler.init(PIN_SDA, PIN_SCL, TAG_UI, ESP_LOG_INFO);
     uiHandler.splashScreen();
 
     vTaskDelay(5000 / portTICK_PERIOD_MS);
@@ -97,12 +98,7 @@ void vTask1(void *pvParameters) {
 }
 
 void vTask2(void *pvParameters) {
-    // Variables for radio
-    float offset = 0.0035;       // device specific, in MHz. See README.md for more information on the matter.
-    float frequency = 439.98750; // Operational frequency
 
-    radioHandler sxradio(LORA_SCK, LORA_MISO, LORA_MOSI, LORA_SS, LORA_DIO0, LORA_DIO1, LORA_DIO2, LORA_RST);
-    sxradio.pocsagInit(frequency, offset, TAG_RADIO);
     sxradio.pocsagSendText(100, "TEST");
 
     for (;;) {
@@ -116,12 +112,12 @@ void vTask2(void *pvParameters) {
 
 void app_main() {
     gpio_set_direction(LED, GPIO_MODE_OUTPUT);
+    uiHandler.init(CALLSIGN, TAG_UI, ESP_LOG_WARN);
+    sxradio.pocsagInit(frequency, offset, TAG_RADIO, ESP_LOG_INFO);
 
     esp_log_level_set(TAG_MAIN, ESP_LOG_WARN);
-    esp_log_level_set(TAG_UI, ESP_LOG_WARN);
     esp_log_level_set(TAG_TASK1, ESP_LOG_WARN);
     esp_log_level_set(TAG_TASK2, ESP_LOG_WARN);
-    esp_log_level_set(TAG_RADIO, ESP_LOG_INFO);
 
     xTaskCreate(vTask1,
                 "Task1",
