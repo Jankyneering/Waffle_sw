@@ -1,3 +1,5 @@
+#define CALLSIGN "ON4PFD"
+
 // SDA - GPIO21
 #define PIN_SDA 21
 // SCL - GPIO22

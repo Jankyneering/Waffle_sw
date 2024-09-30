@@ -11,9 +11,7 @@
 
 #include "radioHandler.h"
 
-#include "periph.h"
-
-#define CALLSIGN "ON4PFD"
+#include "config.h"
 
 extern "C" {
 void app_main(void);
@@ -103,7 +101,7 @@ void vTask2(void *pvParameters) {
     float offset = 0.0035;       // device specific, in MHz. See README.md for more information on the matter.
     float frequency = 439.98750; // Operational frequency
 
-    radioHandler sxradio;
+    radioHandler sxradio(LORA_SCK, LORA_MISO, LORA_MOSI, LORA_SS, LORA_DIO0, LORA_DIO1, LORA_RST);
     sxradio.pocsagInit(frequency, offset, "RADIO");
     sxradio.pocsagSendText(100, "TEST");
 
