@@ -23,7 +23,7 @@ static const UBaseType_t UITaskPriority = 2;
 static const UBaseType_t taskPriority = 1;
 
 static const char *TAG_MAIN = "MAIN";
-static const char *TAG_SCREEN = "SCREEN";
+static const char *TAG_UI = "UI";
 static const char *TAG_TASK1 = "TASK1";
 static const char *TAG_TASK2 = "TASK2";
 static const char *TAG_RADIO = "RADIO";
@@ -61,7 +61,7 @@ void print_chip_info() {
 
 void vUITask(void *pvParameters) {
     UIHandler uiHandler(CALLSIGN);
-    uiHandler.init(PIN_SDA, PIN_SCL, "UI", ESP_LOG_INFO);
+    uiHandler.init(PIN_SDA, PIN_SCL, TAG_UI, ESP_LOG_INFO);
     uiHandler.splashScreen();
 
     vTaskDelay(5000 / portTICK_PERIOD_MS);
@@ -101,8 +101,8 @@ void vTask2(void *pvParameters) {
     float offset = 0.0035;       // device specific, in MHz. See README.md for more information on the matter.
     float frequency = 439.98750; // Operational frequency
 
-    radioHandler sxradio(LORA_SCK, LORA_MISO, LORA_MOSI, LORA_SS, LORA_DIO0, LORA_DIO1, LORA_RST);
-    sxradio.pocsagInit(frequency, offset, "RADIO");
+    radioHandler sxradio(LORA_SCK, LORA_MISO, LORA_MOSI, LORA_SS, LORA_DIO0, LORA_DIO1, LORA_DIO2, LORA_RST);
+    sxradio.pocsagInit(frequency, offset, TAG_RADIO);
     sxradio.pocsagSendText(100, "TEST");
 
     for (;;) {
@@ -118,7 +118,7 @@ void app_main() {
     gpio_set_direction(LED, GPIO_MODE_OUTPUT);
 
     esp_log_level_set(TAG_MAIN, ESP_LOG_WARN);
-    esp_log_level_set(TAG_SCREEN, ESP_LOG_WARN);
+    esp_log_level_set(TAG_UI, ESP_LOG_WARN);
     esp_log_level_set(TAG_TASK1, ESP_LOG_WARN);
     esp_log_level_set(TAG_TASK2, ESP_LOG_WARN);
     esp_log_level_set(TAG_RADIO, ESP_LOG_INFO);
