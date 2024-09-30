@@ -15,7 +15,7 @@
 class UIHandler {
 public:
     UIHandler(char *callsign);
-    int init(int PIN_SDA, int PIN_SCL, char *TAG, esp_log_level_t LOG_LEVEL);
+    int init(int PIN_SDA, int PIN_SCL, const char *TAG, esp_log_level_t LOG_LEVEL);
     int sleep();
     int wake();
     int redraw();
@@ -28,7 +28,7 @@ public:
 private:
     char *_callsign; // Pointer to a character array (string)
     u8g2_t u8g2; // a structure which will contain all the data for one display
-    char *TAG_UI;
+    const char *TAG_UI;
     int _menu;
     void drawRSSIbars(u8g2_t _u8g2, u8g2_uint_t x, u8g2_uint_t y, int rssi);
     int _rssi = 0;

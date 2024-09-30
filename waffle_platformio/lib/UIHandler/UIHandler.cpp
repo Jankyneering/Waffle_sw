@@ -28,7 +28,7 @@ UIHandler::UIHandler(char *callsign) {
     _callsign = callsign;
 }
 
-int UIHandler::init(int PIN_SDA, int PIN_SCL, char *TAG = "UI", esp_log_level_t LOG_LEVEL = ESP_LOG_INFO) {
+int UIHandler::init(int PIN_SDA, int PIN_SCL, const char *TAG = "UI", esp_log_level_t LOG_LEVEL = ESP_LOG_INFO) {
     TAG_UI = TAG;
     esp_log_level_set(TAG_UI, LOG_LEVEL);
     ESP_LOGI(TAG_UI, "Initializing UIHandler");
