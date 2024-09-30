@@ -66,20 +66,30 @@ int radioHandler::pocsagStartRx() {
     }
 }
 
-int radioHandler::pocsagAvailable() {
-    ESP_LOGI(TAG_RADIO, "POCSAG Available: %d", _pager->available());
+int radioHandler::getRSSI() {
+    int RSSI = _radio.getRSSI(true);
+    pocsagStartRx();
+    return RSSI;
+}
+
+int radioHandler::pocsagAvailable(bool debug) {
+    if (debug) {
+        ESP_LOGI(TAG_RADIO, "POCSAG Available: %d", _pager->available());
+    }
     return _pager->available();
 }
 
-int radioHandler::pocsagGetMessage(char *message) {
+int radioHandler::pocsagGetMessage(int *address, char *message) {
     ESP_LOGI(TAG_RADIO, "Reading data");
-    uint32_t addr = 0;
     uint8_t str[32]; // Adjust size as needed
-    int state = _pager->readData(str, 0);//, 0, &addr);
+    uint32_t addr = 0;
+    size_t len = 32;
+    int state = _pager->readData(str, &len, &addr);
     if (state == RADIOLIB_ERR_NONE) {
         ESP_LOGI(TAG_RADIO, "RX success!");
         ESP_LOGI(TAG_RADIO, "Message: %s", str);
         ESP_LOGI(TAG_RADIO, "Address: %d", (int)addr);
+        *address = (int)addr;
         strncpy(message, (char *)str, 32);
         return 0;
     } else {
