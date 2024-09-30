@@ -169,6 +169,13 @@ void UIHandler::setRSSI(int rssi) {
     redraw();
 }
 
+int UIHandler::displayMessage(char message[32]) {
+    // constrains message to 32 characters
+    strncpy(_message, message, 32);
+    showMenu(0);
+    return 0;
+}
+
 void UIHandler::setNewMessage(bool newMessage) {
     _newMessage = newMessage;
     redraw();
@@ -228,8 +235,8 @@ int UIHandler::showMenu(int menu) {
         ESP_LOGI(TAG_UI, "main");
         u8g2_SetFont(&u8g2, u8g2_font_6x13_mf);
         u8g2_DrawStr(&u8g2, 0, 10, _callsign);
-        u8g2_SetFont(&u8g2, u8g2_font_inb16_mf);
-        u8g2_DrawStr(&u8g2, 0, 40, "Hii UwU");
+        //u8g2_SetFont(&u8g2, u8g2_font_inb16_mf);
+        u8g2_DrawStr(&u8g2, 0, 40, _message);
         break;
     case 1:
         ESP_LOGI(TAG_UI, "Menu 1");

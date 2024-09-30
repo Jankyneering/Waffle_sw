@@ -1,7 +1,11 @@
 // #include "RadioLib.h"
-#include <esp_log.h>
 #include "radioHandler.h"
 #include "RadioLib_esp32_hal.h"
+#include "esp_task_wdt.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "sdkconfig.h"
+#include <esp_log.h>
 
 radioHandler::radioHandler(int LORA_SCK, int LORA_MISO, int LORA_MOSI, int LORA_SS, int LORA_DIO0, int LORA_DIO1, int LORA_DIO2, int LORA_RST) {
     _LORA_SCK = LORA_SCK;
@@ -37,7 +41,7 @@ void radioHandler::pocsagInit(float frequency, float offset, const char *TAG, es
     }
 
     // initialize Pager client
-    ESP_LOGI(TAG_RADIO, "[Pager] Initializing ... "); // Print a message to the console
+    ESP_LOGI(TAG_RADIO, "[Pager] Initializing ... ");  // Print a message to the console
     state = _pager->begin(_frequency + _offset, 1200); // Initialize the pager client
     if (state == RADIOLIB_ERR_NONE) {
         ESP_LOGI(TAG_RADIO, "success!"); // Report success
@@ -48,17 +52,39 @@ void radioHandler::pocsagInit(float frequency, float offset, const char *TAG, es
     }
 }
 
-void radioHandler::pocsagStartRx() {
+int radioHandler::pocsagStartRx() {
     // start receiving POCSAG messages
     ESP_LOGI(TAG_RADIO, "[Pager] Starting to listen ... "); // Print a message to the console
     // address of this "pager":     1234567
     int state = _pager->startReceive(_LORA_DIO2, 200, 0); // Start receiving messages
     if (state == RADIOLIB_ERR_NONE) {
-        ESP_LOGI(TAG_RADIO, "success!"); // Report success
+        ESP_LOGI(TAG_RADIO, "RX start success!"); // Report success
+        return 0;
     } else {
-        ESP_LOGE(TAG_RADIO, "failed "); // Report error
-        while (true)
-            ; // Halt
+        ESP_LOGE(TAG_RADIO, "RX start failed "); // Report error
+        return -1;
+    }
+}
+
+int radioHandler::pocsagAvailable() {
+    ESP_LOGI(TAG_RADIO, "POCSAG Available: %d", _pager->available());
+    return _pager->available();
+}
+
+int radioHandler::pocsagGetMessage(char *message) {
+    ESP_LOGI(TAG_RADIO, "Reading data");
+    uint32_t addr = 0;
+    uint8_t str[32]; // Adjust size as needed
+    int state = _pager->readData(str, 0);//, 0, &addr);
+    if (state == RADIOLIB_ERR_NONE) {
+        ESP_LOGI(TAG_RADIO, "RX success!");
+        ESP_LOGI(TAG_RADIO, "Message: %s", str);
+        ESP_LOGI(TAG_RADIO, "Address: %d", (int)addr);
+        strncpy(message, (char *)str, 32);
+        return 0;
+    } else {
+        ESP_LOGE(TAG_RADIO, "RX failed");
+        return -1;
     }
 }
 

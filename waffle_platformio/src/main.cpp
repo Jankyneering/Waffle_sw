@@ -22,9 +22,9 @@ static bool ledState = false;
 static const UBaseType_t UITaskPriority = 2;
 static const UBaseType_t taskPriority = 1;
 
-static const char *TAG_MAIN  = "[MAIN      ]";
-static const char *TAG_UI    = "[UI_Handler]";
-static const char *TAG_LED   = "[LED       ]";
+static const char *TAG_MAIN = "[MAIN      ]";
+static const char *TAG_UI = "[UI_Handler]";
+static const char *TAG_LED = "[LED       ]";
 static const char *TAG_RADIO = "[RADIO     ]";
 
 UIHandler uiHandler(PIN_SDA, PIN_SCL);
@@ -34,24 +34,26 @@ void vUITask(void *pvParameters) {
     uiHandler.splashScreen();
 
     vTaskDelay(5000 / portTICK_PERIOD_MS);
+
+    uiHandler.showMenu(0);
     for (;;) {
-        uiHandler.showMenu(0);
-        uiHandler.setRSSI(0);
+        // uiHandler.showMenu(0);
+        // uiHandler.setRSSI(0);
+        // vTaskDelay(500 / portTICK_PERIOD_MS);
+        // uiHandler.setRSSI(12);
+        // vTaskDelay(500 / portTICK_PERIOD_MS);
+        // uiHandler.setRSSI(42);
+        // vTaskDelay(500 / portTICK_PERIOD_MS);
+        // uiHandler.setRSSI(69);
+        // vTaskDelay(500 / portTICK_PERIOD_MS);
+        // uiHandler.setRSSI(100);
         vTaskDelay(500 / portTICK_PERIOD_MS);
-        uiHandler.setRSSI(12);
-        vTaskDelay(500 / portTICK_PERIOD_MS);
-        uiHandler.setRSSI(42);
-        vTaskDelay(500 / portTICK_PERIOD_MS);
-        uiHandler.setRSSI(69);
-        vTaskDelay(500 / portTICK_PERIOD_MS);
-        uiHandler.setRSSI(100);
-        vTaskDelay(500 / portTICK_PERIOD_MS);
-        uiHandler.setNewMessage(true);
-        for (int i = 0; i <= 3; i++) {
-            uiHandler.showMenu(i);
-            vTaskDelay(1500 / portTICK_PERIOD_MS);
-        }
-        uiHandler.setNewMessage(false);
+        // uiHandler.setNewMessage(true);
+        // for (int i = 0; i <= 3; i++) {
+        //     uiHandler.showMenu(i);
+        //     vTaskDelay(1500 / portTICK_PERIOD_MS);
+        // }
+        // uiHandler.setNewMessage(false);
     }
     vTaskDelete(NULL);
 }
@@ -60,7 +62,19 @@ void vRadioTask(void *pvParameters) {
     ESP_LOGI(TAG_RADIO, "Radio is running");
     ESP_LOGI(TAG_RADIO, "Radio is running on core %d\n", xPortGetCoreID());
 
-    sxradio.pocsagSendText(100, "TEST");
+    // sxradio.pocsagSendText(100, "TEST");
+
+    sxradio.pocsagStartRx();
+    for (;;) {
+
+        char *message = new char[32];
+        if (sxradio.pocsagAvailable()) {
+            sxradio.pocsagGetMessage(message);
+
+            uiHandler.displayMessage(message);
+        }
+        vTaskDelay(100 / portTICK_PERIOD_MS);
+    }
 
     vTaskDelete(NULL);
 }
@@ -85,7 +99,7 @@ void app_main() {
 
     xTaskCreate(vRadioTask,
                 "RadioTask",
-                5000,
+                20000,
                 NULL,
                 taskPriority,
                 NULL);
