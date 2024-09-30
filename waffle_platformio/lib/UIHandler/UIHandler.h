@@ -35,7 +35,7 @@ private:
     esp_log_level_t _LOG_LEVEL;
     int _menu;
     void drawRSSIbars(u8g2_t _u8g2, u8g2_uint_t x, u8g2_uint_t y, int rssi);
-    int _rssi = 0;
+    int _rssi = -180;
     char _message[32] = "No message";
     bool _newMessage = 0;
 };

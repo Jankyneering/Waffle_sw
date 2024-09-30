@@ -65,17 +65,19 @@ void vRadioTask(void *pvParameters) {
     // sxradio.pocsagSendText(100, "TEST");
 
     sxradio.pocsagStartRx();
-    for (;;) {
 
-        char *message = new char[32];
-        int *address = new int;
-        if (sxradio.pocsagAvailable()>= 2) {
+    char *message = new char[32];
+    int *address = new int;
+    char *fullMessage = new char[32];
+    for (;;) {
+        if (sxradio.pocsagAvailable() >= 2) {
             sxradio.pocsagGetMessage(address, message);
             // Concatenate the address and the message
-            char *fullMessage = new char[32];
             sprintf(fullMessage, "%d: %s", *address, message);
             uiHandler.displayMessage(fullMessage);
-            ESP_LOGI(TAG_RADIO, "RSSI : %d", sxradio.getRSSI());
+            int RSSI = sxradio.getRSSI();
+            ESP_LOGI(TAG_RADIO, "RSSI : %d", RSSI);
+            uiHandler.setRSSI(RSSI);
         }
         vTaskDelay(100 / portTICK_PERIOD_MS);
     }

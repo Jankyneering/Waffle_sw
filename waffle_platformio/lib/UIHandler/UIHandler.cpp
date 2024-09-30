@@ -23,7 +23,6 @@
 
 const int menuAmount = 3;
 
-
 UIHandler::UIHandler(int PIN_SDA, int PIN_SCL) {
     _PIN_SDA = PIN_SDA;
     _PIN_SCL = PIN_SCL;
@@ -182,36 +181,36 @@ void UIHandler::setNewMessage(bool newMessage) {
 }
 
 void UIHandler::drawRSSIbars(u8g2_t _u8g2, u8g2_uint_t x, u8g2_uint_t y, int rssi) {
-    switch(rssi) {
-    case 0:
-        u8g2_DrawBox(&_u8g2, x, y+8, 3, 1);
-        u8g2_DrawBox(&_u8g2, x+4, y+8, 3, 1);
-        u8g2_DrawBox(&_u8g2, x+8, y+8, 3, 1);
-        u8g2_DrawBox(&_u8g2, x+12, y+8, 3, 1);
+    switch (rssi) {
+    case -200 ... - 175:
+        u8g2_DrawBox(&_u8g2, x, y + 8, 3, 1);
+        u8g2_DrawBox(&_u8g2, x + 4, y + 8, 3, 1);
+        u8g2_DrawBox(&_u8g2, x + 8, y + 8, 3, 1);
+        u8g2_DrawBox(&_u8g2, x + 12, y + 8, 3, 1);
         break;
-    case 1 ... 24:
-        u8g2_DrawBox(&_u8g2, x, y+8, 3, 1);
-        u8g2_DrawBox(&_u8g2, x+4, y+8, 3, 1);
-        u8g2_DrawBox(&_u8g2, x+8, y+8, 3, 1);
-        u8g2_DrawBox(&_u8g2, x+12, y+6, 3, 3);
+    case -174 ... - 151:
+        u8g2_DrawBox(&_u8g2, x, y + 8, 3, 1);
+        u8g2_DrawBox(&_u8g2, x + 4, y + 8, 3, 1);
+        u8g2_DrawBox(&_u8g2, x + 8, y + 8, 3, 1);
+        u8g2_DrawBox(&_u8g2, x + 12, y + 6, 3, 3);
         break;
-    case 25 ... 49:
-        u8g2_DrawBox(&_u8g2, x, y+8, 3, 1);
-        u8g2_DrawBox(&_u8g2, x+4, y+8, 3, 1);
-        u8g2_DrawBox(&_u8g2, x+8, y+4, 3, 5);
-        u8g2_DrawBox(&_u8g2, x+12, y+6, 3, 3);
+    case -150 ... - 127:
+        u8g2_DrawBox(&_u8g2, x, y + 8, 3, 1);
+        u8g2_DrawBox(&_u8g2, x + 4, y + 8, 3, 1);
+        u8g2_DrawBox(&_u8g2, x + 8, y + 4, 3, 5);
+        u8g2_DrawBox(&_u8g2, x + 12, y + 6, 3, 3);
         break;
-    case 50 ... 74:
-        u8g2_DrawBox(&_u8g2, x, y+8, 3, 1);
-        u8g2_DrawBox(&_u8g2, x+4, y+2, 3, 7);
-        u8g2_DrawBox(&_u8g2, x+8, y+4, 3, 5);
-        u8g2_DrawBox(&_u8g2, x+12, y+6, 3, 3);
+    case -126 ... - 103:
+        u8g2_DrawBox(&_u8g2, x, y + 8, 3, 1);
+        u8g2_DrawBox(&_u8g2, x + 4, y + 2, 3, 7);
+        u8g2_DrawBox(&_u8g2, x + 8, y + 4, 3, 5);
+        u8g2_DrawBox(&_u8g2, x + 12, y + 6, 3, 3);
         break;
-    case 75 ... 100:
+    case -102 ... 0:
         u8g2_DrawBox(&_u8g2, x, y, 3, 9);
-        u8g2_DrawBox(&_u8g2, x+4, y+2, 3, 7);
-        u8g2_DrawBox(&_u8g2, x+8, y+4, 3, 5);
-        u8g2_DrawBox(&_u8g2, x+12, y+6, 3, 3);
+        u8g2_DrawBox(&_u8g2, x + 4, y + 2, 3, 7);
+        u8g2_DrawBox(&_u8g2, x + 8, y + 4, 3, 5);
+        u8g2_DrawBox(&_u8g2, x + 12, y + 6, 3, 3);
         break;
     default:
         ESP_LOGW(TAG_UI, "RSSI draw failed");
@@ -235,7 +234,7 @@ int UIHandler::showMenu(int menu) {
         ESP_LOGI(TAG_UI, "main");
         u8g2_SetFont(&u8g2, u8g2_font_6x13_mf);
         u8g2_DrawStr(&u8g2, 0, 10, _callsign);
-        //u8g2_SetFont(&u8g2, u8g2_font_inb16_mf);
+        // u8g2_SetFont(&u8g2, u8g2_font_inb16_mf);
         u8g2_DrawStr(&u8g2, 0, 40, _message);
         break;
     case 1:

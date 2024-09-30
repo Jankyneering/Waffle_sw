@@ -67,7 +67,7 @@ int radioHandler::pocsagStartRx() {
 }
 
 int radioHandler::getRSSI() {
-    int RSSI = _radio.getRSSI(true);
+    int RSSI = _radio.getRSSI();
     pocsagStartRx();
     return RSSI;
 }
