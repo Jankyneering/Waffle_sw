@@ -15,3 +15,7 @@
 #define LORA_RST 23
 
 #define LED GPIO_NUM_25
+#define UP GPIO_NUM_13
+#define OK GPIO_NUM_15
+#define DOWN GPIO_NUM_2
+#define BUZZER GPIO_NUM_4
