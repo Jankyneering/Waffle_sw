@@ -17,10 +17,12 @@ radioHandler::radioHandler(int LORA_SCK, int LORA_MISO, int LORA_MOSI, int LORA_
     _pager = new PagerClient(&_radio);
 }
 
-void radioHandler::pocsagInit(float frequency, float offset, const char *TAG) {
+void radioHandler::pocsagInit(float frequency, float offset, const char *TAG, esp_log_level_t LOG_LEVEL) {
     TAG_RADIO = TAG;
     _frequency = frequency;
     _offset = offset;
+    _LOG_LEVEL = LOG_LEVEL;
+    esp_log_level_set(TAG_RADIO, LOG_LEVEL);
 
     // initialize SX1278 with default settings
     ESP_LOGI(TAG_RADIO, "[SX1278] Initializing ... "); // Print a message to the console

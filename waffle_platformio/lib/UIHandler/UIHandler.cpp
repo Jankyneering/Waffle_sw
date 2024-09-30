@@ -30,7 +30,8 @@ UIHandler::UIHandler(char *callsign) {
 
 int UIHandler::init(int PIN_SDA, int PIN_SCL, const char *TAG = "UI", esp_log_level_t LOG_LEVEL = ESP_LOG_INFO) {
     TAG_UI = TAG;
-    esp_log_level_set(TAG_UI, LOG_LEVEL);
+    _LOG_LEVEL = LOG_LEVEL;
+    esp_log_level_set(TAG_UI, _LOG_LEVEL);
     ESP_LOGI(TAG_UI, "Initializing UIHandler");
     u8g2_esp32_hal_t u8g2_esp32_hal = U8G2_ESP32_HAL_DEFAULT;
 

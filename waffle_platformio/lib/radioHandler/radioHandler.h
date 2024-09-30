@@ -19,7 +19,7 @@
 class radioHandler {
 public:
     radioHandler(int LORA_SCK, int LORA_MISO, int LORA_MOSI, int LORA_SS, int LORA_DIO0, int LORA_DIO1, int LORA_DIO2, int LORA_RST);
-    void pocsagInit(float frequency, float offset, const char *TAG = "RADIO");
+    void pocsagInit(float frequency, float offset, const char *TAG = "RADIO", esp_log_level_t LOG_LEVEL = ESP_LOG_INFO);
     void pocsagStartRx();
     void pocsagSendText(int txRic, char *txText);
     void pocsagSendNum(int txRic, char *txNum);
@@ -37,6 +37,7 @@ private:
     SX1278 _radio = new Module(_hal, _LORA_SS, _LORA_DIO0, _LORA_RST, _LORA_DIO1);
     PagerClient *_pager;
     const char *TAG_RADIO;
+    esp_log_level_t _LOG_LEVEL;
     float _frequency;
     float _offset;
     int _txRic;
