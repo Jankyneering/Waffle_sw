@@ -118,6 +118,7 @@ void vSPIFFSTask(void *pvParameters) {
         }
         fclose(file);
     }
+    esp_vfs_spiffs_unregister(NULL);
     vTaskDelete(NULL);
 }
 
