@@ -1,12 +1,14 @@
 #include "UIHandler.h"
 #include "driver/gpio.h"
 #include "esp_chip_info.h"
+#include "esp_spiffs.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "sdkconfig.h"
 #include <driver/i2c_master.h>
 #include <driver/spi_master.h>
 #include <esp_log.h>
+// #include <esp_vfs.h> // Include this header for esp_spiffs_dir_entry_t
 #include <stdio.h>
 
 #include "radioHandler.h"
@@ -26,6 +28,7 @@ static const char *TAG_MAIN = "[MAIN      ]";
 static const char *TAG_UI = "[UI_Handler]";
 static const char *TAG_LED = "[LED       ]";
 static const char *TAG_RADIO = "[RADIO     ]";
+static const char *TAG_SPIFFS = "[SPIFFS    ]";
 
 UIHandler uiHandler(PIN_SDA, PIN_SCL);
 radioHandler sxradio(LORA_SCK, LORA_MISO, LORA_MOSI, LORA_SS, LORA_DIO0, LORA_DIO1, LORA_DIO2, LORA_RST);
@@ -95,6 +98,29 @@ void vLedTask(void *pvParameters) {
     }
 }
 
+void vSPIFFSTask(void *pvParameters) {
+    // Show all files in spiffs
+    esp_vfs_spiffs_conf_t config = {
+        .base_path = "/spiffs",
+        .partition_label = NULL,
+        .max_files = 5,
+        .format_if_mount_failed = true,
+    };
+    esp_vfs_spiffs_register(&config);
+
+    FILE *file = fopen("/spiffs/text.txt", "r");
+    if (file == NULL) {
+        ESP_LOGE(TAG_SPIFFS, "File does not exist!");
+    } else {
+        char line[256];
+        while (fgets(line, sizeof(line), file) != NULL) {
+            ESP_LOGI(TAG_SPIFFS, "%s", line);
+        }
+        fclose(file);
+    }
+    vTaskDelete(NULL);
+}
+
 void app_main() {
     gpio_set_direction(LED, GPIO_MODE_OUTPUT);
     uiHandler.init(CALLSIGN, TAG_UI, ESP_LOG_WARN);
@@ -102,6 +128,7 @@ void app_main() {
 
     esp_log_level_set(TAG_MAIN, ESP_LOG_WARN);
     esp_log_level_set(TAG_LED, ESP_LOG_WARN);
+    esp_log_level_set(TAG_SPIFFS, ESP_LOG_INFO);
 
     xTaskCreate(vRadioTask,
                 "RadioTask",
@@ -122,6 +149,13 @@ void app_main() {
                                 // stack (arbitrary size enough for this task)
                 NULL,           // No parameter passed to the task
                 UITaskPriority, // Priority of the task
+                NULL);          // No handle
+    xTaskCreate(vSPIFFSTask,    // Entry function of the task
+                "SPIFFSTask",   // Name of the task
+                10000,          // The number of words to allocate for use as the task's
+                                // stack (arbitrary size enough for this task)
+                NULL,           // No parameter passed to the task
+                taskPriority,   // Priority of the task
                 NULL);          // No handle
 
     for (;;) {
