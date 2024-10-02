@@ -22,6 +22,7 @@ void app_main(void);
 static bool ledState = false;
 
 static const UBaseType_t UITaskPriority = 2;
+static const UBaseType_t RadioTaskPriority = 3;
 static const UBaseType_t taskPriority = 1;
 
 static const char *TAG_MAIN = "[MAIN      ]";
@@ -135,7 +136,7 @@ void app_main() {
                 "RadioTask",
                 100000,
                 NULL,
-                taskPriority,
+                RadioTaskPriority,
                 NULL);
     xTaskCreate(vLedTask,       // Entry function of the task
                 "LedTask",      // Name of the task
