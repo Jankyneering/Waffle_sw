@@ -1,5 +1,4 @@
 {
   "CALLSIGN": "ON4PFD",
-  "ADDRESSES" : [ 100,
-                  420 ]
+  "ADDRESSES" : [ [100, 1],[420, 2] ]
 }

@@ -1,16 +1,17 @@
-#include "UIHandler.h"
-#include "driver/gpio.h"
-#include "esp_chip_info.h"
-#include "esp_spiffs.h"
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "sdkconfig.h"
+#include <cJSON.h>
+#include <driver/gpio.h>
 #include <driver/i2c_master.h>
 #include <driver/spi_master.h>
+#include <esp_chip_info.h>
 #include <esp_log.h>
-// #include <esp_vfs.h> // Include this header for esp_spiffs_dir_entry_t
+#include <esp_spiffs.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+#include <fstream>
+#include <sdkconfig.h>
 #include <stdio.h>
 
+#include "UIHandler.h"
 #include "radioHandler.h"
 
 #include "config.h"
@@ -128,6 +129,53 @@ void app_main() {
         }
         fclose(file);
     }
+
+    // esp_vfs_spiffs_unregister(NULL);
+
+    // esp_vfs_spiffs_register(&config);
+
+    // open config.json, read CALLSIGN key that contains a string, and the ADRESSES key that contains an array of arrays of integers
+    // JSON file can contain a lot of lines and whitespaces that have to be removed
+    // before parsing the JSON object
+    cJSON *root = NULL;
+    cJSON *callsign = NULL;
+    cJSON *addresses = NULL;
+    char *fileContent = NULL;
+    FILE *f = fopen("/spiffs/config.json", "r");
+    if (f == NULL) {
+        ESP_LOGE(TAG_SPIFFS, "Failed to open file for reading");
+    } else {
+        fseek(f, 0, SEEK_END);
+        long fsize = ftell(f);
+        fseek(f, 0, SEEK_SET);
+        fileContent = (char *)malloc(fsize + 1);
+        fread(fileContent, 1, fsize, f);
+        fclose(f);
+        fileContent[fsize] = 0;
+        root = cJSON_Parse(fileContent);
+        if (root == NULL) {
+            ESP_LOGE(TAG_SPIFFS, "Error before: [%s]\n", cJSON_GetErrorPtr());
+        } else {
+            callsign = cJSON_GetObjectItem(root, "CALLSIGN");
+            if (callsign == NULL) {
+                ESP_LOGE(TAG_SPIFFS, "CALLSIGN not found in config.json");
+            } else {
+                ESP_LOGI(TAG_SPIFFS, "CALLSIGN: %s", callsign->valuestring);
+            }
+            addresses = cJSON_GetObjectItem(root, "ADDRESSES");
+            if (addresses == NULL) {
+                ESP_LOGE(TAG_SPIFFS, "ADDRESSES not found in config.json");
+            } else {
+                cJSON *address = NULL;
+                cJSON_ArrayForEach(address, addresses) {
+                    cJSON *address1 = cJSON_GetArrayItem(address, 0);
+                    cJSON *address2 = cJSON_GetArrayItem(address, 1);
+                    ESP_LOGI(TAG_SPIFFS, "Address: %d, %d", address1->valueint, address2->valueint);
+                }
+            }
+        }
+    }
+
     esp_vfs_spiffs_unregister(NULL);
 
     xTaskCreate(vRadioTask,
