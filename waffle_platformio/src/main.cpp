@@ -35,6 +35,61 @@ static const char *TAG_SPIFFS = "[SPIFFS    ]";
 UIHandler uiHandler(PIN_SDA, PIN_SCL);
 radioHandler sxradio(LORA_SCK, LORA_MISO, LORA_MOSI, LORA_SS, LORA_DIO0, LORA_DIO1, LORA_DIO2, LORA_RST);
 
+esp_vfs_spiffs_conf_t config = {
+    .base_path = "/spiffs",
+    .partition_label = NULL,
+    .max_files = 5,
+    .format_if_mount_failed = true,
+};
+
+// Void to read the config, store the CALLSIGN value and the ADDRESSES array in a passed variable
+void readConfig(char *CALLSIGN, int (*ADDRESSES)[2]) {
+    esp_vfs_spiffs_register(&config);
+    cJSON *root = NULL;
+    cJSON *callsign = NULL;
+    cJSON *addresses = NULL;
+    char *fileContent = NULL;
+    FILE *f = fopen("/spiffs/config.json", "r");
+    if (f == NULL) {
+        ESP_LOGE(TAG_SPIFFS, "Failed to open file for reading");
+    } else {
+        fseek(f, 0, SEEK_END);
+        long fsize = ftell(f);
+        fseek(f, 0, SEEK_SET);
+        fileContent = (char *)malloc(fsize + 1);
+        fread(fileContent, 1, fsize, f);
+        fclose(f);
+        fileContent[fsize] = 0;
+        root = cJSON_Parse(fileContent);
+        if (root == NULL) {
+            ESP_LOGE(TAG_SPIFFS, "Error before: [%s]\n", cJSON_GetErrorPtr());
+        } else {
+            callsign = cJSON_GetObjectItem(root, "CALLSIGN");
+            if (callsign == NULL) {
+                ESP_LOGE(TAG_SPIFFS, "CALLSIGN not found in config.json");
+            } else {
+                ESP_LOGI(TAG_SPIFFS, "CALLSIGN: %s", callsign->valuestring);
+                strcpy(CALLSIGN, callsign->valuestring);
+            }
+            addresses = cJSON_GetObjectItem(root, "ADDRESSES");
+            if (addresses == NULL) {
+                ESP_LOGE(TAG_SPIFFS, "ADDRESSES not found in config.json");
+            } else {
+                cJSON *address = NULL;
+                int i = 0;
+                cJSON_ArrayForEach(address, addresses) {
+                    cJSON *address1 = cJSON_GetArrayItem(address, 0);
+                    cJSON *address2 = cJSON_GetArrayItem(address, 1);
+                    ESP_LOGI(TAG_SPIFFS, "Address: %d, %d", address1->valueint, address2->valueint);
+                    ADDRESSES[i][0] = address1->valueint;
+                    ADDRESSES[i][1] = address2->valueint;
+                }
+            }
+        }
+    }
+    esp_vfs_spiffs_unregister(NULL);
+}
+
 void vUITask(void *pvParameters) {
     uiHandler.splashScreen();
 
@@ -101,6 +156,9 @@ void vLedTask(void *pvParameters) {
 }
 
 void app_main() {
+    char CALLSIGN[32];
+    int ADDRESSES[10][2];
+    readConfig(CALLSIGN, ADDRESSES);
     gpio_set_direction(LED, GPIO_MODE_OUTPUT);
     uiHandler.init(CALLSIGN, TAG_UI, ESP_LOG_WARN);
     sxradio.pocsagInit(frequency, offset, TAG_RADIO, ESP_LOG_INFO);
@@ -108,75 +166,6 @@ void app_main() {
     esp_log_level_set(TAG_MAIN, ESP_LOG_WARN);
     esp_log_level_set(TAG_LED, ESP_LOG_WARN);
     esp_log_level_set(TAG_SPIFFS, ESP_LOG_INFO);
-
-    ESP_LOGI(TAG_SPIFFS, "Listing files in /spiffs");
-    // Show all files in spiffs
-    esp_vfs_spiffs_conf_t config = {
-        .base_path = "/spiffs",
-        .partition_label = NULL,
-        .max_files = 5,
-        .format_if_mount_failed = true,
-    };
-    esp_vfs_spiffs_register(&config);
-
-    FILE *file = fopen("/spiffs/text.txt", "r");
-    if (file == NULL) {
-        ESP_LOGE(TAG_SPIFFS, "File does not exist!");
-    } else {
-        char line[256];
-        while (fgets(line, sizeof(line), file) != NULL) {
-            ESP_LOGI(TAG_SPIFFS, "%s", line);
-        }
-        fclose(file);
-    }
-
-    // esp_vfs_spiffs_unregister(NULL);
-
-    // esp_vfs_spiffs_register(&config);
-
-    // open config.json, read CALLSIGN key that contains a string, and the ADRESSES key that contains an array of arrays of integers
-    // JSON file can contain a lot of lines and whitespaces that have to be removed
-    // before parsing the JSON object
-    cJSON *root = NULL;
-    cJSON *callsign = NULL;
-    cJSON *addresses = NULL;
-    char *fileContent = NULL;
-    FILE *f = fopen("/spiffs/config.json", "r");
-    if (f == NULL) {
-        ESP_LOGE(TAG_SPIFFS, "Failed to open file for reading");
-    } else {
-        fseek(f, 0, SEEK_END);
-        long fsize = ftell(f);
-        fseek(f, 0, SEEK_SET);
-        fileContent = (char *)malloc(fsize + 1);
-        fread(fileContent, 1, fsize, f);
-        fclose(f);
-        fileContent[fsize] = 0;
-        root = cJSON_Parse(fileContent);
-        if (root == NULL) {
-            ESP_LOGE(TAG_SPIFFS, "Error before: [%s]\n", cJSON_GetErrorPtr());
-        } else {
-            callsign = cJSON_GetObjectItem(root, "CALLSIGN");
-            if (callsign == NULL) {
-                ESP_LOGE(TAG_SPIFFS, "CALLSIGN not found in config.json");
-            } else {
-                ESP_LOGI(TAG_SPIFFS, "CALLSIGN: %s", callsign->valuestring);
-            }
-            addresses = cJSON_GetObjectItem(root, "ADDRESSES");
-            if (addresses == NULL) {
-                ESP_LOGE(TAG_SPIFFS, "ADDRESSES not found in config.json");
-            } else {
-                cJSON *address = NULL;
-                cJSON_ArrayForEach(address, addresses) {
-                    cJSON *address1 = cJSON_GetArrayItem(address, 0);
-                    cJSON *address2 = cJSON_GetArrayItem(address, 1);
-                    ESP_LOGI(TAG_SPIFFS, "Address: %d, %d", address1->valueint, address2->valueint);
-                }
-            }
-        }
-    }
-
-    esp_vfs_spiffs_unregister(NULL);
 
     xTaskCreate(vRadioTask,
                 "RadioTask",
