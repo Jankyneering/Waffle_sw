@@ -83,7 +83,7 @@ void vRadioTask(void *pvParameters) {
             ESP_LOGI(TAG_RADIO, "RSSI : %d", RSSI);
             uiHandler.setRSSI(RSSI);
         }
-        vTaskDelay(100 / portTICK_PERIOD_MS);
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 
     vTaskDelete(NULL);
@@ -99,7 +99,16 @@ void vLedTask(void *pvParameters) {
     }
 }
 
-void vSPIFFSTask(void *pvParameters) {
+void app_main() {
+    gpio_set_direction(LED, GPIO_MODE_OUTPUT);
+    uiHandler.init(CALLSIGN, TAG_UI, ESP_LOG_WARN);
+    sxradio.pocsagInit(frequency, offset, TAG_RADIO, ESP_LOG_INFO);
+
+    esp_log_level_set(TAG_MAIN, ESP_LOG_WARN);
+    esp_log_level_set(TAG_LED, ESP_LOG_WARN);
+    esp_log_level_set(TAG_SPIFFS, ESP_LOG_INFO);
+
+    ESP_LOGI(TAG_SPIFFS, "Listing files in /spiffs");
     // Show all files in spiffs
     esp_vfs_spiffs_conf_t config = {
         .base_path = "/spiffs",
@@ -120,21 +129,10 @@ void vSPIFFSTask(void *pvParameters) {
         fclose(file);
     }
     esp_vfs_spiffs_unregister(NULL);
-    vTaskDelete(NULL);
-}
-
-void app_main() {
-    gpio_set_direction(LED, GPIO_MODE_OUTPUT);
-    uiHandler.init(CALLSIGN, TAG_UI, ESP_LOG_WARN);
-    sxradio.pocsagInit(frequency, offset, TAG_RADIO, ESP_LOG_INFO);
-
-    esp_log_level_set(TAG_MAIN, ESP_LOG_WARN);
-    esp_log_level_set(TAG_LED, ESP_LOG_WARN);
-    esp_log_level_set(TAG_SPIFFS, ESP_LOG_INFO);
 
     xTaskCreate(vRadioTask,
                 "RadioTask",
-                100000,
+                50000,
                 NULL,
                 RadioTaskPriority,
                 NULL);
@@ -151,13 +149,6 @@ void app_main() {
                                 // stack (arbitrary size enough for this task)
                 NULL,           // No parameter passed to the task
                 UITaskPriority, // Priority of the task
-                NULL);          // No handle
-    xTaskCreate(vSPIFFSTask,    // Entry function of the task
-                "SPIFFSTask",   // Name of the task
-                10000,          // The number of words to allocate for use as the task's
-                                // stack (arbitrary size enough for this task)
-                NULL,           // No parameter passed to the task
-                taskPriority,   // Priority of the task
                 NULL);          // No handle
 
     for (;;) {
