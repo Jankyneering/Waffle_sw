@@ -5,6 +5,3 @@
 [submodule "RadioLib"]
 	path = waffle_platformio/components/RadioLib
 	url = https://github.com/jgromes/RadioLib
-[submodule "JSONlib"]
-	path = waffle_platformio/components/json
-	url = https://github.com/nlohmann/json
