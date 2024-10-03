@@ -20,36 +20,36 @@ extern "C" {
 void app_main(void);
 }
 
-static bool ledState = false;
+static bool ledState                       = false;
 
-static const UBaseType_t UITaskPriority = 2;
+static const UBaseType_t UITaskPriority    = 2;
 static const UBaseType_t RadioTaskPriority = 3;
-static const UBaseType_t taskPriority = 1;
+static const UBaseType_t taskPriority      = 1;
 
-static const char *TAG_MAIN = "[MAIN      ]";
-static const char *TAG_UI = "[UI_Handler]";
-static const char *TAG_LED = "[LED       ]";
-static const char *TAG_RADIO = "[RADIO     ]";
-static const char *TAG_SPIFFS = "[SPIFFS    ]";
+static const char *TAG_MAIN                = "[MAIN      ]";
+static const char *TAG_UI                  = "[UI_Handler]";
+static const char *TAG_LED                 = "[LED       ]";
+static const char *TAG_RADIO               = "[RADIO     ]";
+static const char *TAG_SPIFFS              = "[SPIFFS    ]";
 
 UIHandler uiHandler(PIN_SDA, PIN_SCL);
 radioHandler sxradio(LORA_SCK, LORA_MISO, LORA_MOSI, LORA_SS, LORA_DIO0, LORA_DIO1, LORA_DIO2, LORA_RST);
 
 esp_vfs_spiffs_conf_t config = {
-    .base_path = "/spiffs",
-    .partition_label = NULL,
-    .max_files = 5,
+    .base_path              = "/spiffs",
+    .partition_label        = NULL,
+    .max_files              = 5,
     .format_if_mount_failed = true,
 };
 
 // Void to read the config, store the CALLSIGN value and the ADDRESSES array in a passed variable
 void readConfig(char *CALLSIGN, int (*ADDRESSES)[2]) {
     esp_vfs_spiffs_register(&config);
-    cJSON *root = NULL;
-    cJSON *callsign = NULL;
-    cJSON *addresses = NULL;
+    cJSON *root       = NULL;
+    cJSON *callsign   = NULL;
+    cJSON *addresses  = NULL;
     char *fileContent = NULL;
-    FILE *f = fopen("/spiffs/config.json", "r");
+    FILE *f           = fopen("/spiffs/config.json", "r");
     if (f == NULL) {
         ESP_LOGE(TAG_SPIFFS, "Failed to open file for reading");
     } else {
@@ -60,7 +60,7 @@ void readConfig(char *CALLSIGN, int (*ADDRESSES)[2]) {
         fread(fileContent, 1, fsize, f);
         fclose(f);
         fileContent[fsize] = 0;
-        root = cJSON_Parse(fileContent);
+        root               = cJSON_Parse(fileContent);
         if (root == NULL) {
             ESP_LOGE(TAG_SPIFFS, "Error before: [%s]\n", cJSON_GetErrorPtr());
         } else {
@@ -76,7 +76,7 @@ void readConfig(char *CALLSIGN, int (*ADDRESSES)[2]) {
                 ESP_LOGE(TAG_SPIFFS, "ADDRESSES not found in config.json");
             } else {
                 cJSON *address = NULL;
-                int i = 0;
+                int i          = 0;
                 cJSON_ArrayForEach(address, addresses) {
                     cJSON *address1 = cJSON_GetArrayItem(address, 0);
                     cJSON *address2 = cJSON_GetArrayItem(address, 1);
@@ -126,8 +126,8 @@ void vRadioTask(void *pvParameters) {
 
     sxradio.pocsagStartRx();
 
-    char *message = new char[32];
-    int *address = new int;
+    char *message     = new char[32];
+    int *address      = new int;
     char *fullMessage = new char[32];
     for (;;) {
         if (sxradio.pocsagAvailable() >= 2) {
@@ -139,7 +139,7 @@ void vRadioTask(void *pvParameters) {
             ESP_LOGI(TAG_RADIO, "RSSI : %d", RSSI);
             uiHandler.setRSSI(RSSI);
         }
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        vTaskDelay(100 / portTICK_PERIOD_MS);
     }
 
     vTaskDelete(NULL);
