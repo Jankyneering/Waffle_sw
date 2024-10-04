@@ -152,9 +152,6 @@ void vRadioTask(void *pvParameters) {
     for (;;) {
         if (sxradio.pocsagAvailable() >= 2) {
             sxradio.pocsagGetMessage(address, message);
-            // Concatenate the address and the message
-            sprintf(fullMessage, "%d: %s", *address, message);
-            uiHandler.displayMessage(fullMessage);
             int RSSI = sxradio.getRSSI();
             ESP_LOGI(TAG_RADIO, "RSSI : %d", RSSI);
             uiHandler.setRSSI(RSSI);
@@ -163,6 +160,9 @@ void vRadioTask(void *pvParameters) {
             for (int i = 0; i < 10; i++) {
                 if (ADDRESSES[i][0] == *address) {
                     ESP_LOGI(TAG_RADIO, "Address found in list");
+                    // Concatenate the address and the message
+                    sprintf(fullMessage, "%d: %s", *address, message);
+                    uiHandler.displayMessage(fullMessage);
                     uiHandler.setNewMessage(true);
 
                     // Save to messages.csv with Address, message, RSSI
