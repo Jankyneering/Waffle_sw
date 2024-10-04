@@ -47,7 +47,7 @@ esp_vfs_spiffs_conf_t config = {
 
 // Void to read the config, store the CALLSIGN value and the ADDRESSES array in a passed variable
 void readConfig(char *CALLSIGN, int (*ADDRESSES)[2]) {
-    esp_vfs_spiffs_register(&config);
+    // esp_vfs_spiffs_register(&config);
     cJSON *root       = NULL;
     cJSON *callsign   = NULL;
     cJSON *addresses  = NULL;
@@ -91,7 +91,23 @@ void readConfig(char *CALLSIGN, int (*ADDRESSES)[2]) {
             }
         }
     }
-    esp_vfs_spiffs_unregister(NULL);
+    // esp_vfs_spiffs_unregister(NULL);
+}
+
+void dumpMessages() {
+    // esp_vfs_spiffs_register(&config);
+    ESP_LOGI(TAG_SPIFFS, "Reading messages.csv");
+    FILE *f = fopen("/spiffs/messages.csv", "r");
+    if (f == NULL) {
+        ESP_LOGE(TAG_SPIFFS, "Failed to open file for reading");
+    } else {
+        char line[256];
+        while (fgets(line, sizeof(line), f)) {
+            ESP_LOGI(TAG_SPIFFS, "%s", line);
+        }
+        fclose(f);
+    }
+    // esp_vfs_spiffs_unregister(NULL);
 }
 
 void vUITask(void *pvParameters) {
@@ -148,9 +164,23 @@ void vRadioTask(void *pvParameters) {
                 if (ADDRESSES[i][0] == *address) {
                     ESP_LOGI(TAG_RADIO, "Address found in list");
                     uiHandler.setNewMessage(true);
+
+                    // Save to messages.csv with Address, message, RSSI
+                    ESP_LOGI(TAG_SPIFFS, "Writing to messages.csv");
+                    FILE *f = fopen("/spiffs/messages.csv", "a");
+                    if (f == NULL) {
+                        ESP_LOGE(TAG_SPIFFS, "Failed to open file for writing");
+                    } else {
+                        fprintf(f, "%d,%s,%d\n", *address, message, RSSI);
+                        fclose(f);
+                    }
+                    // esp_vfs_spiffs_unregister(NULL);
+
                     break;
                 }
             }
+
+            sxradio.pocsagStartRx();
         }
         vTaskDelay(100 / portTICK_PERIOD_MS);
     }
@@ -169,7 +199,9 @@ void vLedTask(void *pvParameters) {
 }
 
 void app_main() {
+    esp_vfs_spiffs_register(&config);
     readConfig(CALLSIGN, ADDRESSES);
+    dumpMessages();
     gpio_set_direction(LED, GPIO_MODE_OUTPUT);
     uiHandler.init(CALLSIGN, TAG_UI, ESP_LOG_WARN);
     sxradio.pocsagInit(frequency, offset, TAG_RADIO, ESP_LOG_INFO);
