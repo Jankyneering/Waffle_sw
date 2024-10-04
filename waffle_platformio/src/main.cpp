@@ -20,7 +20,10 @@ extern "C" {
 void app_main(void);
 }
 
-static bool ledState                       = false;
+static bool ledState = false;
+
+char CALLSIGN[32];
+int ADDRESSES[10][2];
 
 static const UBaseType_t UITaskPriority    = 2;
 static const UBaseType_t RadioTaskPriority = 3;
@@ -83,6 +86,7 @@ void readConfig(char *CALLSIGN, int (*ADDRESSES)[2]) {
                     ESP_LOGI(TAG_SPIFFS, "Address: %d, %d", address1->valueint, address2->valueint);
                     ADDRESSES[i][0] = address1->valueint;
                     ADDRESSES[i][1] = address2->valueint;
+                    i++;
                 }
             }
         }
@@ -138,6 +142,15 @@ void vRadioTask(void *pvParameters) {
             int RSSI = sxradio.getRSSI();
             ESP_LOGI(TAG_RADIO, "RSSI : %d", RSSI);
             uiHandler.setRSSI(RSSI);
+
+            // Check if address is in the list of addresses
+            for (int i = 0; i < 10; i++) {
+                if (ADDRESSES[i][0] == *address) {
+                    ESP_LOGI(TAG_RADIO, "Address found in list");
+                    uiHandler.setNewMessage(true);
+                    break;
+                }
+            }
         }
         vTaskDelay(100 / portTICK_PERIOD_MS);
     }
@@ -156,8 +169,6 @@ void vLedTask(void *pvParameters) {
 }
 
 void app_main() {
-    char CALLSIGN[32];
-    int ADDRESSES[10][2];
     readConfig(CALLSIGN, ADDRESSES);
     gpio_set_direction(LED, GPIO_MODE_OUTPUT);
     uiHandler.init(CALLSIGN, TAG_UI, ESP_LOG_WARN);
