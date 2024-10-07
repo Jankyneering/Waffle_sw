@@ -116,24 +116,15 @@ void vUITask(void *pvParameters) {
     vTaskDelay(5000 / portTICK_PERIOD_MS);
 
     uiHandler.showMenu(0);
+    int currMenu = uiHandler.getMenu();
+    int prevMenu = currMenu;
     for (;;) {
-        // uiHandler.showMenu(0);
-        // uiHandler.setRSSI(0);
-        // vTaskDelay(500 / portTICK_PERIOD_MS);
-        // uiHandler.setRSSI(12);
-        // vTaskDelay(500 / portTICK_PERIOD_MS);
-        // uiHandler.setRSSI(42);
-        // vTaskDelay(500 / portTICK_PERIOD_MS);
-        // uiHandler.setRSSI(69);
-        // vTaskDelay(500 / portTICK_PERIOD_MS);
-        // uiHandler.setRSSI(100);
-        vTaskDelay(500 / portTICK_PERIOD_MS);
-        // uiHandler.setNewMessage(true);
-        // for (int i = 0; i <= 3; i++) {
-        //     uiHandler.showMenu(i);
-        //     vTaskDelay(1500 / portTICK_PERIOD_MS);
-        // }
-        // uiHandler.setNewMessage(false);
+        currMenu = uiHandler.getMenu();
+        if (currMenu != prevMenu) {
+            uiHandler.redraw();
+            prevMenu = currMenu;
+        }
+        vTaskDelay(50 / portTICK_PERIOD_MS);
     }
     vTaskDelete(NULL);
 }
@@ -198,14 +189,48 @@ void vLedTask(void *pvParameters) {
     }
 }
 
+static void IRAM_ATTR gpio_isr_handler(void *arg) {
+    uint32_t gpio_num = (uint32_t)arg;
+    if (gpio_num == UP) {
+        uiHandler.upButton(NULL);
+    } else if (gpio_num == OK) {
+        uiHandler.okButton(NULL);
+    } else if (gpio_num == DOWN) {
+        uiHandler.downButton(NULL);
+    }
+
+}
+
 void app_main() {
     esp_vfs_spiffs_register(&config);
     readConfig(CALLSIGN, ADDRESSES);
     dumpMessages();
 
+    uiHandler.init(CALLSIGN, TAG_UI, ESP_LOG_WARN);
+    uiHandler.splashScreen();
+
+    gpio_set_direction(LED, GPIO_MODE_OUTPUT);
+    gpio_set_direction(UP, GPIO_MODE_INPUT);
+    gpio_set_direction(OK, GPIO_MODE_INPUT);
+    gpio_set_direction(DOWN, GPIO_MODE_INPUT);
+
+    gpio_pullup_en(UP);
+    gpio_pulldown_dis(UP);
+    gpio_pullup_en(OK);
+    gpio_pulldown_dis(OK);
+    gpio_pullup_en(DOWN);
+    gpio_pulldown_dis(DOWN);
+
+    gpio_set_intr_type(UP, GPIO_INTR_NEGEDGE);
+    gpio_set_intr_type(OK, GPIO_INTR_NEGEDGE);
+    gpio_set_intr_type(DOWN, GPIO_INTR_NEGEDGE);
+
     gpio_install_isr_service((int)ESP_INTR_FLAG_IRAM);
 
-    uiHandler.init(CALLSIGN, TAG_UI, ESP_LOG_WARN);
+    gpio_isr_handler_add(UP, gpio_isr_handler, (void *)UP);
+    gpio_isr_handler_add(OK, gpio_isr_handler, (void *)OK);
+    gpio_isr_handler_add(DOWN, gpio_isr_handler, (void *)DOWN);
+
     sxradio.pocsagInit(frequency, offset, TAG_RADIO, ESP_LOG_INFO);
 
     esp_log_level_set(TAG_MAIN, ESP_LOG_WARN);

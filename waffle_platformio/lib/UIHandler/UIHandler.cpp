@@ -266,3 +266,28 @@ int UIHandler::showMenu(int menu) {
     u8g2_SendBuffer(&u8g2);
     return 0;
 }
+
+int UIHandler::getMenu() {
+    return _menu;
+}
+
+void UIHandler::upButton(void* arg) {
+    // code for up
+    _menu--;
+    if (_menu < 0) {
+        _menu = _menuAmount;
+    }
+}
+
+void UIHandler::okButton(void* arg) {
+    // code for ok
+    
+}
+
+void UIHandler::downButton(void* arg) {
+    // code for down
+    _menu++;
+    if (_menu > _menuAmount) {
+        _menu = 0;
+    }
+}

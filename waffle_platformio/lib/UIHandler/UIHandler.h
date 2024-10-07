@@ -22,9 +22,13 @@ public:
 
     int splashScreen();
     int showMenu(int menu);
+    int getMenu();
     void setRSSI(int rssi);
     int displayMessage(char message[32]);
     void setNewMessage(bool newMessage);
+    void upButton(void* arg);
+    void okButton(void* arg);
+    void downButton(void* arg);
 
 private:
     int _PIN_SDA;
@@ -34,6 +38,7 @@ private:
     const char *TAG_UI;
     esp_log_level_t _LOG_LEVEL;
     int _menu;
+    int _menuAmount = 3;
     void drawRSSIbars(u8g2_t _u8g2, u8g2_uint_t x, u8g2_uint_t y, int rssi);
     int _rssi = -180;
     char _message[32] = "No message";
