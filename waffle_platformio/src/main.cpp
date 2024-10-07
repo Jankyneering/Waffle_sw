@@ -202,7 +202,9 @@ void app_main() {
     esp_vfs_spiffs_register(&config);
     readConfig(CALLSIGN, ADDRESSES);
     dumpMessages();
-    gpio_set_direction(LED, GPIO_MODE_OUTPUT);
+
+    gpio_install_isr_service((int)ESP_INTR_FLAG_IRAM);
+
     uiHandler.init(CALLSIGN, TAG_UI, ESP_LOG_WARN);
     sxradio.pocsagInit(frequency, offset, TAG_RADIO, ESP_LOG_INFO);
 

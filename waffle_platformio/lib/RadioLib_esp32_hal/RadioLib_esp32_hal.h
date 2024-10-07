@@ -178,8 +178,8 @@ public:
         if (interruptNum == RADIOLIB_NC) {
             return;
         }
-
-        gpio_install_isr_service((int)ESP_INTR_FLAG_IRAM);
+        
+        //gpio_install_isr_service((int)ESP_INTR_FLAG_IRAM);
         gpio_set_intr_type((gpio_num_t)interruptNum, (gpio_int_type_t)(mode & 0x7));
 
         // this uses function typecasting, which is not defined when the functions have different signatures
