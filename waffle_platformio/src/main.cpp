@@ -116,14 +116,15 @@ void vUITask(void *pvParameters) {
     vTaskDelay(5000 / portTICK_PERIOD_MS);
 
     uiHandler.showMenu(0);
-    int currMenu = uiHandler.getMenu();
-    int prevMenu = currMenu;
+    int redrawFlag = uiHandler.getRedrawFlag();
     for (;;) {
-        currMenu = uiHandler.getMenu();
-        if (currMenu != prevMenu) {
+        redrawFlag = uiHandler.getRedrawFlag();
+        if (redrawFlag > 0) {
             uiHandler.redraw();
-            prevMenu = currMenu;
         }
+
+        uiHandler.sleepFlag ? uiHandler.sleep() : uiHandler.wake();
+
         vTaskDelay(50 / portTICK_PERIOD_MS);
     }
     vTaskDelete(NULL);
@@ -198,7 +199,6 @@ static void IRAM_ATTR gpio_isr_handler(void *arg) {
     } else if (gpio_num == DOWN) {
         uiHandler.downButton(NULL);
     }
-
 }
 
 void app_main() {
