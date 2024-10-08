@@ -159,6 +159,7 @@ void vUITask(void *pvParameters) {
     int redrawFlag                  = uiHandler.getRedrawFlag();
     long unsigned int currentTimeS  = 0;
     long unsigned int RSSIlastTimeS = 0;
+    bool RSSIdecay = true;
     struct timeval tv;
     for (;;) {
         currentTimeS = esp_timer_get_time() / 1000000;
@@ -172,10 +173,12 @@ void vUITask(void *pvParameters) {
             RSSIlastTimeS = currentTimeS;
             uiHandler.setRSSI(RSSI);
             newRSSI = false;
+            RSSIdecay = false;
         }
-        if (currentTimeS - RSSIlastTimeS > RSSI_DECAY) {
+        if (currentTimeS - RSSIlastTimeS > RSSI_DECAY && !RSSIdecay) {
             ESP_LOGI(TAG_MAIN, "RSSI decay now !");
             uiHandler.setRSSI(-180);
+            RSSIdecay = true;
         }
         if (newMessage) {
             uiHandler.displayMessage(fullMessage);
