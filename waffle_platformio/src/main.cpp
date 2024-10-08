@@ -92,7 +92,7 @@ void readConfig(char *_CALLSIGN, int *_XTIME_ADDRESS, int (*_ADDRESSES)[2]) {
                 *_XTIME_ADDRESS = xtime_address->valueint;
             }
 
-            addresses            = cJSON_GetObjectItem(root, "ADDRESSES");
+            addresses = cJSON_GetObjectItem(root, "ADDRESSES");
             if (addresses == NULL) {
                 ESP_LOGE(TAG_SPIFFS, "ADDRESSES not found in config.json");
             } else {
@@ -137,7 +137,7 @@ void setTime(char *message) {
     // "XTIME=HHMMDDMMYY"
     struct tm tm;
     tm.tm_year = 2000 + (message[14] - '0') * 10 + (message[15] - '0') - 1900;
-    tm.tm_mon  = (message[12] - '0') * 10 + (message[13] - '0') -1;
+    tm.tm_mon  = (message[12] - '0') * 10 + (message[13] - '0') - 1;
     tm.tm_mday = (message[10] - '0') * 10 + (message[11] - '0');
     tm.tm_hour = (message[6] - '0') * 10 + (message[7] - '0');
     tm.tm_min  = (message[8] - '0') * 10 + (message[9] - '0');
@@ -156,24 +156,32 @@ void vUITask(void *pvParameters) {
     vTaskDelay(5000 / portTICK_PERIOD_MS);
 
     uiHandler.showMenu(0);
-    int redrawFlag = uiHandler.getRedrawFlag();
+    int redrawFlag                  = uiHandler.getRedrawFlag();
+    long unsigned int currentTimeS  = 0;
+    long unsigned int RSSIlastTimeS = 0;
     struct timeval tv;
     for (;;) {
-        redrawFlag = uiHandler.getRedrawFlag();
+        currentTimeS = esp_timer_get_time() / 1000000;
+
+        redrawFlag   = uiHandler.getRedrawFlag();
         if (redrawFlag > 0) {
             uiHandler.redraw();
             uiHandler.sleepFlag ? uiHandler.sleep() : uiHandler.wake();
         }
         if (newRSSI) {
+            RSSIlastTimeS = currentTimeS;
             uiHandler.setRSSI(RSSI);
             newRSSI = false;
+        }
+        if (currentTimeS - RSSIlastTimeS > RSSI_DECAY) {
+            ESP_LOGI(TAG_MAIN, "RSSI decay now !");
+            uiHandler.setRSSI(-180);
         }
         if (newMessage) {
             uiHandler.displayMessage(fullMessage);
             uiHandler.setNewMessage(true);
             newMessage = false;
         }
-        // check if gettimeofday()'s seconds are 0
         if (gotXTIME) {
             uiHandler.setXTIME(true);
             gotXTIME = false;
@@ -183,7 +191,7 @@ void vUITask(void *pvParameters) {
             uiHandler.redraw();
             gotXTIME = false;
         }
-        
+
         vTaskDelay(50 / portTICK_PERIOD_MS);
     }
     vTaskDelete(NULL);
