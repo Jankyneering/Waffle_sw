@@ -76,6 +76,13 @@ int UIHandler::redraw() {
     return 0;
 }
 
+int UIHandler::blankScreen() {
+    ESP_LOGI(TAG_UI, "Blanking screen");
+    u8g2_ClearBuffer(&u8g2);
+    u8g2_SendBuffer(&u8g2);
+    return 0;
+}
+
 int UIHandler::splashScreen() {
     ESP_LOGI(TAG_UI, "Displaying splash screen");
     ESP_LOGI(TAG_UI, "u8g2_ClearBuffer");
@@ -265,4 +272,36 @@ int UIHandler::showMenu(int menu) {
 
     u8g2_SendBuffer(&u8g2);
     return 0;
+}
+
+int UIHandler::getRedrawFlag() {
+    int ret = _redrawFlag;
+    _redrawFlag--;
+    if (_redrawFlag < 0) {
+        _redrawFlag = 0;
+    }
+    return ret;
+}
+
+void UIHandler::upButton(void* arg) {
+    // code for up
+    _menu--;
+    if (_menu < 0) {
+        _menu = _menuAmount;
+    }
+    _redrawFlag++;
+}
+
+void UIHandler::okButton(void* arg) {
+    // code for ok
+    sleepFlag = !sleepFlag;
+}
+
+void UIHandler::downButton(void* arg) {
+    // code for down
+    _menu++;
+    if (_menu > _menuAmount) {
+        _menu = 0;
+    }
+    _redrawFlag++;
 }
