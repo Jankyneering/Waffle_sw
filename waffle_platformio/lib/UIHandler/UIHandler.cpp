@@ -2,14 +2,13 @@
  * UIHandler.cpp
  */
 
-// #include <list>
-
-#include "esp_log.h"
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "sdkconfig.h"
 #include "u8g2.h"
 #include "u8g2_esp32_hal.h"
+#include <esp_log.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+#include <fstream>
+#include <sdkconfig.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -29,8 +28,8 @@ UIHandler::UIHandler(int PIN_SDA, int PIN_SCL) {
 }
 
 int UIHandler::init(char *callsign, const char *TAG = "UI", esp_log_level_t LOG_LEVEL = ESP_LOG_INFO) {
-    _callsign = callsign;
-    TAG_UI = TAG;
+    _callsign  = callsign;
+    TAG_UI     = TAG;
     _LOG_LEVEL = LOG_LEVEL;
     esp_log_level_set(TAG_UI, _LOG_LEVEL);
     ESP_LOGI(TAG_UI, "Initializing UIHandler");
@@ -39,7 +38,7 @@ int UIHandler::init(char *callsign, const char *TAG = "UI", esp_log_level_t LOG_
 #ifdef SSD1306
     u8g2_esp32_hal.bus.i2c.sda = (gpio_num_t)_PIN_SDA;
     u8g2_esp32_hal.bus.i2c.scl = (gpio_num_t)_PIN_SCL;
-    u8g2_esp32_hal.clk_speed = 400000;
+    u8g2_esp32_hal.clk_speed   = 400000;
     u8g2_esp32_hal_init(u8g2_esp32_hal);
 
     u8g2_Setup_ssd1306_i2c_128x64_noname_f(
@@ -236,11 +235,21 @@ int UIHandler::showMenu(int menu) {
     }
     drawRSSIbars(u8g2, 110, 1, _rssi);
 
+    // create HH:MM string with gettimeofday()
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    struct tm *tm = localtime(&tv.tv_sec);
+    char timeString[6];
+    sprintf(timeString, "%02d:%02d", tm->tm_hour, tm->tm_min);
+    // concatenate callsign and time : "CALLSIGN - HH:MM"
+    char menu_time[32];
+
     switch (_menu) {
     case 0:
         ESP_LOGI(TAG_UI, "main");
+        sprintf(menu_time, "%s - %s", _callsign, timeString);
         u8g2_SetFont(&u8g2, u8g2_font_6x13_mf);
-        u8g2_DrawStr(&u8g2, 0, 10, _callsign);
+        u8g2_DrawStr(&u8g2, 0, 10, menu_time);
         // u8g2_SetFont(&u8g2, u8g2_font_inb16_mf);
         u8g2_DrawStr(&u8g2, 0, 40, _message);
         break;
@@ -283,7 +292,7 @@ int UIHandler::getRedrawFlag() {
     return ret;
 }
 
-void UIHandler::upButton(void* arg) {
+void UIHandler::upButton(void *arg) {
     // code for up
     _menu--;
     if (_menu < 0) {
@@ -292,13 +301,13 @@ void UIHandler::upButton(void* arg) {
     _redrawFlag++;
 }
 
-void UIHandler::okButton(void* arg) {
+void UIHandler::okButton(void *arg) {
     // code for ok
     sleepFlag = !sleepFlag;
     _redrawFlag++;
 }
 
-void UIHandler::downButton(void* arg) {
+void UIHandler::downButton(void *arg) {
     // code for down
     _menu++;
     if (_menu > _menuAmount) {

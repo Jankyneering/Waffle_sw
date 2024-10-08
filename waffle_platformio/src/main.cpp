@@ -28,6 +28,7 @@ char *fullMessage    = new char[256];
 int RSSI             = -180;
 bool newRSSI         = false;
 bool newMessage      = false;
+bool gotXTIME        = false;
 
 char CALLSIGN[32];
 int XTIME_ADDRESS;
@@ -136,7 +137,7 @@ void setTime(char *message) {
     // "XTIME=HHMMDDMMYY"
     struct tm tm;
     tm.tm_year = 2000 + (message[14] - '0') * 10 + (message[15] - '0') - 1900;
-    tm.tm_mon  = (message[12] - '0') * 10 + (message[13] - '0');
+    tm.tm_mon  = (message[12] - '0') * 10 + (message[13] - '0') -1;
     tm.tm_mday = (message[10] - '0') * 10 + (message[11] - '0');
     tm.tm_hour = (message[6] - '0') * 10 + (message[7] - '0');
     tm.tm_min  = (message[8] - '0') * 10 + (message[9] - '0');
@@ -146,6 +147,7 @@ void setTime(char *message) {
     // save to RTC
     struct timeval now = {.tv_sec = t, .tv_usec = 0};
     settimeofday(&now, NULL);
+    gotXTIME = true;
 }
 
 void vUITask(void *pvParameters) {
@@ -155,6 +157,7 @@ void vUITask(void *pvParameters) {
 
     uiHandler.showMenu(0);
     int redrawFlag = uiHandler.getRedrawFlag();
+    struct timeval tv;
     for (;;) {
         redrawFlag = uiHandler.getRedrawFlag();
         if (redrawFlag > 0) {
@@ -163,11 +166,20 @@ void vUITask(void *pvParameters) {
         }
         if (newRSSI) {
             uiHandler.setRSSI(RSSI);
+            newRSSI = false;
         }
         if (newMessage) {
             uiHandler.displayMessage(fullMessage);
             uiHandler.setNewMessage(true);
+            newMessage = false;
         }
+        // check if gettimeofday()'s seconds are 0
+        gettimeofday(&tv, NULL);
+        if (tv.tv_sec % 60 == 0 || gotXTIME) {
+            uiHandler.redraw();
+            gotXTIME = false;
+        }
+        
         vTaskDelay(50 / portTICK_PERIOD_MS);
     }
     vTaskDelete(NULL);
