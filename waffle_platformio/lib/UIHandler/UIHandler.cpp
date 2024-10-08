@@ -174,6 +174,11 @@ void UIHandler::setRSSI(int rssi) {
     redraw();
 }
 
+void UIHandler::setXTIME(bool xtime) {
+    _gotXTIME = xtime;
+    redraw();
+}
+
 int UIHandler::displayMessage(char message[32]) {
     // constrains message to 32 characters
     strncpy(_message, message, 32);
@@ -235,21 +240,21 @@ int UIHandler::showMenu(int menu) {
     }
     drawRSSIbars(u8g2, 110, 1, _rssi);
 
-    // create HH:MM string with gettimeofday()
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    struct tm *tm = localtime(&tv.tv_sec);
-    char timeString[6];
-    sprintf(timeString, "%02d:%02d", tm->tm_hour, tm->tm_min);
-    // concatenate callsign and time : "CALLSIGN - HH:MM"
-    char menu_time[32];
+    if (_gotXTIME) { 
+        struct timeval tv;
+        gettimeofday(&tv, NULL);
+        struct tm *tm = localtime(&tv.tv_sec);
+        char timeString[6];
+        sprintf(timeString, "%02d:%02d", tm->tm_hour, tm->tm_min);
+        u8g2_SetFont(&u8g2, u8g2_font_6x13_mf);
+        u8g2_DrawStr(&u8g2, 50, 10, timeString);
+    }
 
     switch (_menu) {
     case 0:
         ESP_LOGI(TAG_UI, "main");
-        sprintf(menu_time, "%s - %s", _callsign, timeString);
         u8g2_SetFont(&u8g2, u8g2_font_6x13_mf);
-        u8g2_DrawStr(&u8g2, 0, 10, menu_time);
+        u8g2_DrawStr(&u8g2, 0, 10, _callsign);
         // u8g2_SetFont(&u8g2, u8g2_font_inb16_mf);
         u8g2_DrawStr(&u8g2, 0, 40, _message);
         break;

@@ -174,6 +174,10 @@ void vUITask(void *pvParameters) {
             newMessage = false;
         }
         // check if gettimeofday()'s seconds are 0
+        if (gotXTIME) {
+            uiHandler.setXTIME(true);
+            gotXTIME = false;
+        }
         gettimeofday(&tv, NULL);
         if (tv.tv_sec % 60 == 0 || gotXTIME) {
             uiHandler.redraw();
