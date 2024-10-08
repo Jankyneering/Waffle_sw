@@ -30,6 +30,7 @@ bool newRSSI         = false;
 bool newMessage      = false;
 
 char CALLSIGN[32];
+int XTIME_ADDRESS;
 int ADDRESSES[10][2];
 
 static const UBaseType_t UITaskPriority    = 2;
@@ -53,13 +54,13 @@ esp_vfs_spiffs_conf_t config = {
 };
 
 // Void to read the config, store the CALLSIGN value and the ADDRESSES array in a passed variable
-void readConfig(char *CALLSIGN, int (*ADDRESSES)[2]) {
-    // esp_vfs_spiffs_register(&config);
-    cJSON *root       = NULL;
-    cJSON *callsign   = NULL;
-    cJSON *addresses  = NULL;
-    char *fileContent = NULL;
-    FILE *f           = fopen("/spiffs/config.json", "r");
+void readConfig(char *_CALLSIGN, int *_XTIME_ADDRESS, int (*_ADDRESSES)[2]) {
+    cJSON *root          = NULL;
+    cJSON *callsign      = NULL;
+    cJSON *xtime_address = NULL;
+    cJSON *addresses     = NULL;
+    char *fileContent    = NULL;
+    FILE *f              = fopen("/spiffs/config.json", "r");
     if (f == NULL) {
         ESP_LOGE(TAG_SPIFFS, "Failed to open file for reading");
     } else {
@@ -79,9 +80,18 @@ void readConfig(char *CALLSIGN, int (*ADDRESSES)[2]) {
                 ESP_LOGE(TAG_SPIFFS, "CALLSIGN not found in config.json");
             } else {
                 ESP_LOGI(TAG_SPIFFS, "CALLSIGN: %s", callsign->valuestring);
-                strcpy(CALLSIGN, callsign->valuestring);
+                strcpy(_CALLSIGN, callsign->valuestring);
             }
-            addresses = cJSON_GetObjectItem(root, "ADDRESSES");
+
+            xtime_address = cJSON_GetObjectItem(root, "XTIME_ADDRESS");
+            if (xtime_address == NULL) {
+                ESP_LOGE(TAG_SPIFFS, "XTIME_ADDRESS not found in config.json");
+            } else {
+                ESP_LOGI(TAG_SPIFFS, "XTIME_ADDRESS: %d", xtime_address->valueint);
+                *_XTIME_ADDRESS = xtime_address->valueint;
+            }
+
+            addresses            = cJSON_GetObjectItem(root, "ADDRESSES");
             if (addresses == NULL) {
                 ESP_LOGE(TAG_SPIFFS, "ADDRESSES not found in config.json");
             } else {
@@ -91,18 +101,16 @@ void readConfig(char *CALLSIGN, int (*ADDRESSES)[2]) {
                     cJSON *address1 = cJSON_GetArrayItem(address, 0);
                     cJSON *address2 = cJSON_GetArrayItem(address, 1);
                     ESP_LOGI(TAG_SPIFFS, "Address: %d, %d", address1->valueint, address2->valueint);
-                    ADDRESSES[i][0] = address1->valueint;
-                    ADDRESSES[i][1] = address2->valueint;
+                    _ADDRESSES[i][0] = address1->valueint;
+                    _ADDRESSES[i][1] = address2->valueint;
                     i++;
                 }
             }
         }
     }
-    // esp_vfs_spiffs_unregister(NULL);
 }
 
 void dumpMessages() {
-    // esp_vfs_spiffs_register(&config);
     ESP_LOGI(TAG_SPIFFS, "Reading messages.csv");
     FILE *f = fopen("/spiffs/messages.csv", "r");
     if (f == NULL) {
@@ -114,7 +122,30 @@ void dumpMessages() {
         }
         fclose(f);
     }
-    // esp_vfs_spiffs_unregister(NULL);
+}
+
+void setTime(char *message) {
+    ESP_LOGI(TAG_MAIN, "Address is XTIME");
+    // check if message starts with "XTIME="
+    if (strncmp(message, "XTIME=", 6) != 0) {
+        ESP_LOGE(TAG_MAIN, "Invalid XTIME message");
+        return;
+    }
+
+    // parse XTIME message :
+    // "XTIME=HHMMDDMMYY"
+    struct tm tm;
+    tm.tm_year = 2000 + (message[14] - '0') * 10 + (message[15] - '0') - 1900;
+    tm.tm_mon  = (message[12] - '0') * 10 + (message[13] - '0');
+    tm.tm_mday = (message[10] - '0') * 10 + (message[11] - '0');
+    tm.tm_hour = (message[6] - '0') * 10 + (message[7] - '0');
+    tm.tm_min  = (message[8] - '0') * 10 + (message[9] - '0');
+    tm.tm_sec  = 0;
+    time_t t   = mktime(&tm);
+    ESP_LOGI(TAG_RADIO, "Setting time     : %s", asctime(&tm));
+    // save to RTC
+    struct timeval now = {.tv_sec = t, .tv_usec = 0};
+    settimeofday(&now, NULL);
 }
 
 void vUITask(void *pvParameters) {
@@ -159,21 +190,7 @@ void vRadioTask(void *pvParameters) {
 
             // check if address is XTIME_ADDRESS
             if (*address == XTIME_ADDRESS) {
-                ESP_LOGI(TAG_RADIO, "Address is XTIME");
-                // parse XTIME message :
-                // "XTIME=HHMMDDMMYY"
-                struct tm tm;
-                tm.tm_year = 2000 + (message[14] - '0') * 10 + (message[15] - '0') - 1900;
-                tm.tm_mon  = (message[12] - '0') * 10 + (message[13] - '0');
-                tm.tm_mday = (message[10] - '0') * 10 + (message[11] - '0');
-                tm.tm_hour = (message[6] - '0') * 10 + (message[7] - '0');
-                tm.tm_min  = (message[8] - '0') * 10 + (message[9] - '0');
-                tm.tm_sec  = 0;
-                time_t t   = mktime(&tm);
-                ESP_LOGI(TAG_RADIO, "Setting time     : %s", asctime(&tm));
-                // save to RTC
-                struct timeval now = {.tv_sec = t, .tv_usec = 0};
-                settimeofday(&now, NULL);
+                setTime(message);
             }
 
             // Check if address is in the list of addresses
@@ -229,7 +246,7 @@ static void IRAM_ATTR gpio_isr_handler(void *arg) {
 
 void app_main() {
     esp_vfs_spiffs_register(&config);
-    readConfig(CALLSIGN, ADDRESSES);
+    readConfig(CALLSIGN, &XTIME_ADDRESS, ADDRESSES);
     dumpMessages();
 
     uiHandler.init(CALLSIGN, TAG_UI, ESP_LOG_WARN);
@@ -292,9 +309,9 @@ void app_main() {
         struct timeval tv;
         gettimeofday(&tv, NULL);
         time_t now = tv.tv_sec;
-		// Convert now to tm struct for local timezone
-		tm* localtm = localtime(&now);
-		printf("The local date and time is: %s", asctime(localtm));
+        // Convert now to tm struct for local timezone
+        tm *localtm = localtime(&now);
+        printf("The local date and time is: %s", asctime(localtm));
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 }

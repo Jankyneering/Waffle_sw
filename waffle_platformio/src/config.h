@@ -1,7 +1,6 @@
 // Variables for radio
 #define offset 0.0035       // device specific, in MHz. See README.md for more information on the matter.
 #define frequency 439.98750 // Operational frequency
-#define XTIME_ADDRESS 208
 
 // SDA - GPIO21
 #define PIN_SDA 21

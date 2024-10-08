@@ -1,5 +1,6 @@
 {
   "CALLSIGN": "ON4PFD",
+  "XTIME_ADDRESS": 208,
   "ADDRESSES" : [ [100, 1],
                   [420, 2],
                   [-1, -1],
