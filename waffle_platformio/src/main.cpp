@@ -22,6 +22,13 @@ void app_main(void);
 
 static bool ledState = false;
 
+char *message        = new char[256];
+int *address         = new int;
+char *fullMessage    = new char[256];
+int RSSI             = -180;
+bool newRSSI         = false;
+bool newMessage      = false;
+
 char CALLSIGN[32];
 int ADDRESSES[10][2];
 
@@ -123,7 +130,13 @@ void vUITask(void *pvParameters) {
             uiHandler.redraw();
             uiHandler.sleepFlag ? uiHandler.sleep() : uiHandler.wake();
         }
-
+        if (newRSSI){
+            uiHandler.setRSSI(RSSI);
+        }
+        if (newMessage) {
+            uiHandler.displayMessage(fullMessage);
+            uiHandler.setNewMessage(true);
+        }
         vTaskDelay(50 / portTICK_PERIOD_MS);
     }
     vTaskDelete(NULL);
@@ -137,15 +150,12 @@ void vRadioTask(void *pvParameters) {
 
     sxradio.pocsagStartRx();
 
-    char *message     = new char[256];
-    int *address      = new int;
-    char *fullMessage = new char[256];
     for (;;) {
         if (sxradio.pocsagAvailable() >= 2) {
             sxradio.pocsagGetMessage(address, message);
-            int RSSI = sxradio.getRSSI();
+            RSSI = sxradio.getRSSI();
             ESP_LOGD(TAG_RADIO, "RSSI : %d", RSSI);
-            uiHandler.setRSSI(RSSI);
+            newRSSI = true;
 
             // Check if address is in the list of addresses
             for (int i = 0; i < 10; i++) {
@@ -153,9 +163,7 @@ void vRadioTask(void *pvParameters) {
                     ESP_LOGI(TAG_RADIO, "Address found in list");
                     // Concatenate the address and the message
                     sprintf(fullMessage, "%d: %s", *address, message);
-                    uiHandler.displayMessage(fullMessage);
-                    uiHandler.setNewMessage(true);
-
+                    newMessage = true;
                     // Save to messages.csv with Address, message, RSSI
                     ESP_LOGI(TAG_SPIFFS, "Writing to messages.csv");
                     FILE *f = fopen("/spiffs/messages.csv", "a");
