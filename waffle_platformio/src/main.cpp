@@ -90,7 +90,7 @@ void readConfig(char *CALLSIGN, int (*ADDRESSES)[2]) {
                 cJSON_ArrayForEach(address, addresses) {
                     cJSON *address1 = cJSON_GetArrayItem(address, 0);
                     cJSON *address2 = cJSON_GetArrayItem(address, 1);
-                    ESP_LOGD(TAG_SPIFFS, "Address: %d, %d", address1->valueint, address2->valueint);
+                    ESP_LOGI(TAG_SPIFFS, "Address: %d, %d", address1->valueint, address2->valueint);
                     ADDRESSES[i][0] = address1->valueint;
                     ADDRESSES[i][1] = address2->valueint;
                     i++;
@@ -110,7 +110,7 @@ void dumpMessages() {
     } else {
         char line[256];
         while (fgets(line, sizeof(line), f)) {
-            ESP_LOGD(TAG_SPIFFS, "%s", line);
+            ESP_LOGI(TAG_SPIFFS, "%s", line);
         }
         fclose(f);
     }
@@ -130,7 +130,7 @@ void vUITask(void *pvParameters) {
             uiHandler.redraw();
             uiHandler.sleepFlag ? uiHandler.sleep() : uiHandler.wake();
         }
-        if (newRSSI){
+        if (newRSSI) {
             uiHandler.setRSSI(RSSI);
         }
         if (newMessage) {
@@ -144,7 +144,7 @@ void vUITask(void *pvParameters) {
 
 void vRadioTask(void *pvParameters) {
     ESP_LOGI(TAG_RADIO, "Radio is running");
-    ESP_LOGD(TAG_RADIO, "Radio is running on core %d\n", xPortGetCoreID());
+    ESP_LOGI(TAG_RADIO, "Radio is running on core %d\n", xPortGetCoreID());
 
     // sxradio.pocsagSendText(100, "TEST");
 
@@ -154,8 +154,27 @@ void vRadioTask(void *pvParameters) {
         if (sxradio.pocsagAvailable() >= 2) {
             sxradio.pocsagGetMessage(address, message);
             RSSI = sxradio.getRSSI();
-            ESP_LOGD(TAG_RADIO, "RSSI : %d", RSSI);
+            ESP_LOGI(TAG_RADIO, "RSSI : %d", RSSI);
             newRSSI = true;
+
+            // check if address is XTIME_ADDRESS
+            if (*address == XTIME_ADDRESS) {
+                ESP_LOGI(TAG_RADIO, "Address is XTIME");
+                // parse XTIME message :
+                // "XTIME=HHMMDDMMYY"
+                struct tm tm;
+                tm.tm_year = 2000 + (message[14] - '0') * 10 + (message[15] - '0') - 1900;
+                tm.tm_mon  = (message[12] - '0') * 10 + (message[13] - '0');
+                tm.tm_mday = (message[10] - '0') * 10 + (message[11] - '0');
+                tm.tm_hour = (message[6] - '0') * 10 + (message[7] - '0');
+                tm.tm_min  = (message[8] - '0') * 10 + (message[9] - '0');
+                tm.tm_sec  = 0;
+                time_t t   = mktime(&tm);
+                ESP_LOGI(TAG_RADIO, "Setting time     : %s", asctime(&tm));
+                // save to RTC
+                struct timeval now = {.tv_sec = t, .tv_usec = 0};
+                settimeofday(&now, NULL);
+            }
 
             // Check if address is in the list of addresses
             for (int i = 0; i < 10; i++) {
@@ -190,7 +209,7 @@ void vRadioTask(void *pvParameters) {
 void vLedTask(void *pvParameters) {
     ESP_LOGI(TAG_LED, "LedTask is running");
     for (;;) {
-        ESP_LOGD(TAG_LED, "LedTask is running on core %d\n", xPortGetCoreID());
+        ESP_LOGI(TAG_LED, "LedTask is running on core %d\n", xPortGetCoreID());
         ledState = !ledState;
         gpio_set_level(LED, ledState);
         vTaskDelay(500 / portTICK_PERIOD_MS);
@@ -238,12 +257,12 @@ void app_main() {
     gpio_isr_handler_add(OK, gpio_isr_handler, (void *)OK);
     gpio_isr_handler_add(DOWN, gpio_isr_handler, (void *)DOWN);
 
-    sxradio.pocsagInit(frequency, offset, TAG_RADIO, ESP_LOG_VERBOSE);
+    sxradio.pocsagInit(frequency, offset, TAG_RADIO, ESP_LOG_INFO);
 
     esp_log_level_set(TAG_MAIN, ESP_LOG_WARN);
     esp_log_level_set(TAG_LED, ESP_LOG_WARN);
     esp_log_level_set(TAG_SPIFFS, ESP_LOG_INFO);
-    esp_log_level_set(TAG_RADIO, ESP_LOG_VERBOSE);
+    esp_log_level_set(TAG_RADIO, ESP_LOG_INFO);
 
     xTaskCreate(vRadioTask,
                 "RadioTask",
@@ -268,8 +287,14 @@ void app_main() {
 
     for (;;) {
         // Display the core on which the main function is running
-        ESP_LOGD(TAG_MAIN, "app_main() is running on core %d\n", xPortGetCoreID());
+        ESP_LOGI(TAG_MAIN, "app_main() is running on core %d\n", xPortGetCoreID());
         // Wait 1 seconds
+        struct timeval tv;
+        gettimeofday(&tv, NULL);
+        time_t now = tv.tv_sec;
+		// Convert now to tm struct for local timezone
+		tm* localtm = localtime(&now);
+		printf("The local date and time is: %s", asctime(localtm));
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 }
