@@ -43,8 +43,9 @@ private:
     int _menu;
     int _menuAmount = 3;
     int _redrawFlag = 0;
-    bool _gotXTIME   = false;
+    bool _gotXTIME  = false;
     void drawRSSIbars(u8g2_t _u8g2, u8g2_uint_t x, u8g2_uint_t y, int rssi);
+    void createMenuBar(u8g2_t _u8g2, const char *title);
     int _rssi         = -180;
     char _message[32] = "No message";
     bool _newMessage  = 0;

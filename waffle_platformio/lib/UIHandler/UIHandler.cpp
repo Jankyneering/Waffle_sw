@@ -229,53 +229,54 @@ void UIHandler::drawRSSIbars(u8g2_t _u8g2, u8g2_uint_t x, u8g2_uint_t y, int rss
     }
 }
 
-int UIHandler::showMenu(int menu) {
-    _menu = menu;
-    ESP_LOGI(TAG_UI, "Displaying menu %d", _menu);
-    u8g2_ClearBuffer(&u8g2);
-
-    u8g2_DrawLine(&u8g2, 0, 12, 127, 12);
+void UIHandler::createMenuBar(u8g2_t _u8g2, const char *title) {
+    u8g2_DrawLine(&_u8g2, 0, 12, 127, 12);
     if (_newMessage) {
-        u8g2_DrawBitmap(&u8g2, 94, 2, 2, 7, envelope);
+        u8g2_DrawBitmap(&_u8g2, 94, 2, 2, 7, envelope);
     }
-    drawRSSIbars(u8g2, 110, 1, _rssi);
+    drawRSSIbars(_u8g2, 110, 1, _rssi);
 
-    if (_gotXTIME) { 
+    if (_gotXTIME) {
         struct timeval tv;
         gettimeofday(&tv, NULL);
         struct tm *tm = localtime(&tv.tv_sec);
         char timeString[6];
         sprintf(timeString, "%02d:%02d", tm->tm_hour, tm->tm_min);
-        u8g2_SetFont(&u8g2, u8g2_font_6x13_mf);
-        u8g2_DrawStr(&u8g2, 50, 10, timeString);
+        u8g2_SetFont(&_u8g2, u8g2_font_6x13_mf);
+        u8g2_DrawStr(&_u8g2, 50, 10, timeString);
     }
+    u8g2_SetFont(&_u8g2, u8g2_font_6x13_mf);
+    u8g2_DrawStr(&_u8g2, 0, 10, title);
+}
+
+int UIHandler::showMenu(int menu) {
+    _menu = menu;
+    ESP_LOGI(TAG_UI, "Displaying menu %d", _menu);
+    u8g2_ClearBuffer(&u8g2);
 
     switch (_menu) {
     case 0:
         ESP_LOGI(TAG_UI, "main");
+        createMenuBar(u8g2, _callsign);
         u8g2_SetFont(&u8g2, u8g2_font_6x13_mf);
-        u8g2_DrawStr(&u8g2, 0, 10, _callsign);
         // u8g2_SetFont(&u8g2, u8g2_font_inb16_mf);
         u8g2_DrawStr(&u8g2, 0, 40, _message);
         break;
     case 1:
         ESP_LOGI(TAG_UI, "Menu 1");
-        u8g2_SetFont(&u8g2, u8g2_font_6x13_mf);
-        u8g2_DrawStr(&u8g2, 0, 10, "Menu 1");
+        createMenuBar(u8g2, "Menu 1");
         u8g2_SetFont(&u8g2, u8g2_font_inb16_mf);
         u8g2_DrawStr(&u8g2, 0, 40, "Item 1");
         break;
     case 2:
         ESP_LOGI(TAG_UI, "Menu 2");
-        u8g2_SetFont(&u8g2, u8g2_font_6x13_mf);
-        u8g2_DrawStr(&u8g2, 0, 10, "Menu 2");
+        createMenuBar(u8g2, "Menu 2");
         u8g2_SetFont(&u8g2, u8g2_font_inb16_mf);
         u8g2_DrawStr(&u8g2, 0, 40, "Item 2");
         break;
     case 3:
         ESP_LOGI(TAG_UI, "Menu 3");
-        u8g2_SetFont(&u8g2, u8g2_font_6x13_mf);
-        u8g2_DrawStr(&u8g2, 0, 10, "Menu 3");
+        createMenuBar(u8g2, "Menu 3");
         u8g2_SetFont(&u8g2, u8g2_font_inb16_mf);
         u8g2_DrawStr(&u8g2, 0, 40, "Item 3");
         break;

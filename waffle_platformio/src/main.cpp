@@ -329,13 +329,14 @@ void app_main() {
     for (;;) {
         // Display the core on which the main function is running
         ESP_LOGI(TAG_MAIN, "app_main() is running on core %d\n", xPortGetCoreID());
+        // struct timeval tv;
+        // gettimeofday(&tv, NULL);
+        // time_t now = tv.tv_sec;
+        // // Convert now to tm struct for local timezone
+        // tm *localtm = localtime(&now);
+        // printf("The local date and time is: %s", asctime(localtm));
+
         // Wait 1 seconds
-        struct timeval tv;
-        gettimeofday(&tv, NULL);
-        time_t now = tv.tv_sec;
-        // Convert now to tm struct for local timezone
-        tm *localtm = localtime(&now);
-        printf("The local date and time is: %s", asctime(localtm));
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 }
