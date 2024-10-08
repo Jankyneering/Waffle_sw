@@ -121,9 +121,8 @@ void vUITask(void *pvParameters) {
         redrawFlag = uiHandler.getRedrawFlag();
         if (redrawFlag > 0) {
             uiHandler.redraw();
+            uiHandler.sleepFlag ? uiHandler.sleep() : uiHandler.wake();
         }
-
-        uiHandler.sleepFlag ? uiHandler.sleep() : uiHandler.wake();
 
         vTaskDelay(50 / portTICK_PERIOD_MS);
     }
@@ -138,9 +137,9 @@ void vRadioTask(void *pvParameters) {
 
     sxradio.pocsagStartRx();
 
-    char *message     = new char[32];
+    char *message     = new char[256];
     int *address      = new int;
-    char *fullMessage = new char[32];
+    char *fullMessage = new char[256];
     for (;;) {
         if (sxradio.pocsagAvailable() >= 2) {
             sxradio.pocsagGetMessage(address, message);
@@ -231,11 +230,12 @@ void app_main() {
     gpio_isr_handler_add(OK, gpio_isr_handler, (void *)OK);
     gpio_isr_handler_add(DOWN, gpio_isr_handler, (void *)DOWN);
 
-    sxradio.pocsagInit(frequency, offset, TAG_RADIO, ESP_LOG_DEBUG);
+    sxradio.pocsagInit(frequency, offset, TAG_RADIO, ESP_LOG_VERBOSE);
 
     esp_log_level_set(TAG_MAIN, ESP_LOG_WARN);
     esp_log_level_set(TAG_LED, ESP_LOG_WARN);
     esp_log_level_set(TAG_SPIFFS, ESP_LOG_INFO);
+    esp_log_level_set(TAG_RADIO, ESP_LOG_VERBOSE);
 
     xTaskCreate(vRadioTask,
                 "RadioTask",

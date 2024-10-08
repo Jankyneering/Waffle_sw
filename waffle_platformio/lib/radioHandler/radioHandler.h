@@ -19,7 +19,7 @@
 class radioHandler {
 public:
     radioHandler(int LORA_SCK, int LORA_MISO, int LORA_MOSI, int LORA_SS, int LORA_DIO0, int LORA_DIO1, int LORA_DIO2, int LORA_RST);
-    void pocsagInit(float frequency, float offset, const char *TAG = "RADIO", esp_log_level_t LOG_LEVEL = ESP_LOG_INFO);
+    void pocsagInit(float frequency, float offset, const char *TAG = "RADIO", esp_log_level_t LOG_LEVEL = ESP_LOG_VERBOSE);
     int pocsagStartRx();
     int pocsagAvailable();
     int pocsagGetMessage(int *address, char *message);

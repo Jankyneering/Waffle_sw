@@ -295,6 +295,7 @@ void UIHandler::upButton(void* arg) {
 void UIHandler::okButton(void* arg) {
     // code for ok
     sleepFlag = !sleepFlag;
+    _redrawFlag++;
 }
 
 void UIHandler::downButton(void* arg) {

@@ -79,17 +79,18 @@ int radioHandler::pocsagAvailable() {
 
 int radioHandler::pocsagGetMessage(int *address, char *message) {
     ESP_LOGD(TAG_RADIO, "Reading POCSAG data");
-    uint8_t str[32]; // Adjust size as needed
+    size_t len = 256;
+    uint8_t str[len]; // Adjust size as needed
     uint32_t addr = 0;
-    size_t len = 32;
     int state = _pager->readData(str, &len, &addr);
     if (state == RADIOLIB_ERR_NONE) {
         ESP_LOGI(TAG_RADIO, "Pocsag RX success!");
         ESP_LOGD(TAG_RADIO, "Message: %s", str);
         ESP_LOGD(TAG_RADIO, "Address: %d", (int)addr);
         *address = (int)addr;
-        ESP_LOGD(TAG_RADIO, "Strncpy operation");
-        strncpy(message, (char *)str, 32);
+        ESP_LOGW(TAG_RADIO, "Strncpy operation");
+        ESP_LOGI(TAG_RADIO, "Str: %s", str);
+        strncpy(message, (char *)str, len);
         return 0;
     } else {
         ESP_LOGE(TAG_RADIO, "Pocsag RX failed");
