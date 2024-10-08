@@ -83,7 +83,7 @@ void readConfig(char *CALLSIGN, int (*ADDRESSES)[2]) {
                 cJSON_ArrayForEach(address, addresses) {
                     cJSON *address1 = cJSON_GetArrayItem(address, 0);
                     cJSON *address2 = cJSON_GetArrayItem(address, 1);
-                    ESP_LOGI(TAG_SPIFFS, "Address: %d, %d", address1->valueint, address2->valueint);
+                    ESP_LOGD(TAG_SPIFFS, "Address: %d, %d", address1->valueint, address2->valueint);
                     ADDRESSES[i][0] = address1->valueint;
                     ADDRESSES[i][1] = address2->valueint;
                     i++;
@@ -103,7 +103,7 @@ void dumpMessages() {
     } else {
         char line[256];
         while (fgets(line, sizeof(line), f)) {
-            ESP_LOGI(TAG_SPIFFS, "%s", line);
+            ESP_LOGD(TAG_SPIFFS, "%s", line);
         }
         fclose(f);
     }
@@ -132,7 +132,7 @@ void vUITask(void *pvParameters) {
 
 void vRadioTask(void *pvParameters) {
     ESP_LOGI(TAG_RADIO, "Radio is running");
-    ESP_LOGI(TAG_RADIO, "Radio is running on core %d\n", xPortGetCoreID());
+    ESP_LOGD(TAG_RADIO, "Radio is running on core %d\n", xPortGetCoreID());
 
     // sxradio.pocsagSendText(100, "TEST");
 
@@ -145,7 +145,7 @@ void vRadioTask(void *pvParameters) {
         if (sxradio.pocsagAvailable() >= 2) {
             sxradio.pocsagGetMessage(address, message);
             int RSSI = sxradio.getRSSI();
-            ESP_LOGI(TAG_RADIO, "RSSI : %d", RSSI);
+            ESP_LOGD(TAG_RADIO, "RSSI : %d", RSSI);
             uiHandler.setRSSI(RSSI);
 
             // Check if address is in the list of addresses
@@ -181,9 +181,9 @@ void vRadioTask(void *pvParameters) {
 }
 
 void vLedTask(void *pvParameters) {
+    ESP_LOGI(TAG_LED, "LedTask is running");
     for (;;) {
-        ESP_LOGI(TAG_LED, "LedTask is running");
-        ESP_LOGI(TAG_LED, "LedTask is running on core %d\n", xPortGetCoreID());
+        ESP_LOGD(TAG_LED, "LedTask is running on core %d\n", xPortGetCoreID());
         ledState = !ledState;
         gpio_set_level(LED, ledState);
         vTaskDelay(500 / portTICK_PERIOD_MS);
@@ -231,7 +231,7 @@ void app_main() {
     gpio_isr_handler_add(OK, gpio_isr_handler, (void *)OK);
     gpio_isr_handler_add(DOWN, gpio_isr_handler, (void *)DOWN);
 
-    sxradio.pocsagInit(frequency, offset, TAG_RADIO, ESP_LOG_INFO);
+    sxradio.pocsagInit(frequency, offset, TAG_RADIO, ESP_LOG_DEBUG);
 
     esp_log_level_set(TAG_MAIN, ESP_LOG_WARN);
     esp_log_level_set(TAG_LED, ESP_LOG_WARN);
@@ -260,7 +260,7 @@ void app_main() {
 
     for (;;) {
         // Display the core on which the main function is running
-        ESP_LOGI(TAG_MAIN, "app_main() is running on core %d\n", xPortGetCoreID());
+        ESP_LOGD(TAG_MAIN, "app_main() is running on core %d\n", xPortGetCoreID());
         // Wait 1 seconds
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }

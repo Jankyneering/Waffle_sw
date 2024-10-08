@@ -29,24 +29,24 @@ void radioHandler::pocsagInit(float frequency, float offset, const char *TAG, es
     esp_log_level_set(TAG_RADIO, LOG_LEVEL);
 
     // initialize SX1278 with default settings
-    ESP_LOGI(TAG_RADIO, "[SX1278] Initializing ... "); // Print a message to the console
+    ESP_LOGD(TAG_RADIO, "[SX1278] Initializing ... "); // Print a message to the console
     int state = _radio.beginFSK();                     // Initialize the radio module
 
     if (state == RADIOLIB_ERR_NONE) {
-        ESP_LOGI(TAG_RADIO, "success!"); // Report success
+        ESP_LOGD(TAG_RADIO, "SX1278 initsuccess!"); // Report success
     } else {
-        ESP_LOGE(TAG_RADIO, "failed");
+        ESP_LOGE(TAG_RADIO, "SX1278 init failed");
         while (true)
             ; // Halt
     }
 
     // initialize Pager client
-    ESP_LOGI(TAG_RADIO, "[Pager] Initializing ... ");  // Print a message to the console
+    ESP_LOGD(TAG_RADIO, "[Pager] Initializing ... ");  // Print a message to the console
     state = _pager->begin(_frequency + _offset, 1200); // Initialize the pager client
     if (state == RADIOLIB_ERR_NONE) {
-        ESP_LOGI(TAG_RADIO, "success!"); // Report success
+        ESP_LOGD(TAG_RADIO, "Pager init success!"); // Report success
     } else {
-        ESP_LOGE(TAG_RADIO, "failed"); // Report error
+        ESP_LOGE(TAG_RADIO, "Pager init failed"); // Report error
         while (true)
             ; // Halt
     }
@@ -54,14 +54,14 @@ void radioHandler::pocsagInit(float frequency, float offset, const char *TAG, es
 
 int radioHandler::pocsagStartRx() {
     // start receiving POCSAG messages
-    ESP_LOGI(TAG_RADIO, "[Pager] Starting to listen ... "); // Print a message to the console
+    ESP_LOGD(TAG_RADIO, "[Pager] Starting to listen ... "); // Print a message to the console
     // address of this "pager":     1234567
     int state = _pager->startReceive(_LORA_DIO2, 200, 0); // Start receiving messages
     if (state == RADIOLIB_ERR_NONE) {
-        ESP_LOGI(TAG_RADIO, "RX start success!"); // Report success
+        ESP_LOGD(TAG_RADIO, "Pager RX start success!"); // Report success
         return 0;
     } else {
-        ESP_LOGE(TAG_RADIO, "RX start failed "); // Report error
+        ESP_LOGE(TAG_RADIO, "Pager RX start failed "); // Report error
         return -1;
     }
 }
@@ -72,28 +72,27 @@ int radioHandler::getRSSI() {
     return RSSI;
 }
 
-int radioHandler::pocsagAvailable(bool debug) {
-    if (debug) {
-        ESP_LOGI(TAG_RADIO, "POCSAG Available: %d", _pager->available());
-    }
+int radioHandler::pocsagAvailable() {
+    ESP_LOGV(TAG_RADIO, "POCSAG Available: %d", _pager->available());
     return _pager->available();
 }
 
 int radioHandler::pocsagGetMessage(int *address, char *message) {
-    ESP_LOGI(TAG_RADIO, "Reading data");
+    ESP_LOGD(TAG_RADIO, "Reading POCSAG data");
     uint8_t str[32]; // Adjust size as needed
     uint32_t addr = 0;
     size_t len = 32;
     int state = _pager->readData(str, &len, &addr);
     if (state == RADIOLIB_ERR_NONE) {
-        ESP_LOGI(TAG_RADIO, "RX success!");
-        ESP_LOGI(TAG_RADIO, "Message: %s", str);
-        ESP_LOGI(TAG_RADIO, "Address: %d", (int)addr);
+        ESP_LOGI(TAG_RADIO, "Pocsag RX success!");
+        ESP_LOGD(TAG_RADIO, "Message: %s", str);
+        ESP_LOGD(TAG_RADIO, "Address: %d", (int)addr);
         *address = (int)addr;
+        ESP_LOGD(TAG_RADIO, "Strncpy operation");
         strncpy(message, (char *)str, 32);
         return 0;
     } else {
-        ESP_LOGE(TAG_RADIO, "RX failed");
+        ESP_LOGE(TAG_RADIO, "Pocsag RX failed");
         return -1;
     }
 }
@@ -101,17 +100,17 @@ int radioHandler::pocsagGetMessage(int *address, char *message) {
 void radioHandler::pocsagSendText(int txRic, char *txText) {
     int state = _pager->transmit(txText, txRic, RADIOLIB_PAGER_ASCII);
     if (state == RADIOLIB_ERR_NONE) {
-        ESP_LOGI(TAG_RADIO, "success!");
+        ESP_LOGI(TAG_RADIO, "Pocsag TX success!");
     } else {
-        ESP_LOGE(TAG_RADIO, "failed");
+        ESP_LOGE(TAG_RADIO, "Pocsag TX failed");
     }
 }
 
 void radioHandler::pocsagSendNum(int txRic, char *txNum) {
     int state = _pager->transmit(txNum, txRic);
     if (state == RADIOLIB_ERR_NONE) {
-        ESP_LOGI(TAG_RADIO, "success!");
+        ESP_LOGI(TAG_RADIO, "Pocsag TX num success!");
     } else {
-        ESP_LOGE(TAG_RADIO, "failed");
+        ESP_LOGE(TAG_RADIO, "Pocsag TX num failed");
     }
 }
