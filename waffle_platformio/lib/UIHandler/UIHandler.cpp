@@ -27,10 +27,11 @@ UIHandler::UIHandler(int PIN_SDA, int PIN_SCL) {
     _PIN_SCL = PIN_SCL;
 }
 
-int UIHandler::init(char *callsign, const char *TAG = "UI", esp_log_level_t LOG_LEVEL = ESP_LOG_INFO) {
+int UIHandler::init(char *callsign, const char *TAG, const char *CODE_REV, esp_log_level_t LOG_LEVEL = ESP_LOG_INFO) {
     _callsign  = callsign;
     TAG_UI     = TAG;
     _LOG_LEVEL = LOG_LEVEL;
+    _code_rev  = CODE_REV;
     esp_log_level_set(TAG_UI, _LOG_LEVEL);
     ESP_LOGI(TAG_UI, "Initializing UIHandler");
     u8g2_esp32_hal_t u8g2_esp32_hal = U8G2_ESP32_HAL_DEFAULT;
@@ -98,10 +99,11 @@ int UIHandler::splashScreen() {
     // u8g2_DrawStr(&u8g2, 18, 30, "fredcorp.cc");
 
     ESP_LOGI(TAG_UI, "u8g2_DrawBitmap");
-    u8g2_DrawBitmap(&u8g2, 0, 5, 8, 54, waffle_logo);
+    u8g2_DrawBitmap(&u8g2, 0, 0, 8, 54, waffle_logo);
     ESP_LOGI(TAG_UI, "u8g2_SetFont");
     u8g2_SetFont(&u8g2, u8g2_font_6x13_mf);
     ESP_LOGI(TAG_UI, "u8g2_DrawStr");
+    u8g2_DrawStr(&u8g2, 0, 64, _code_rev);
     u8g2_DrawStr(&u8g2, 72, 16, "Waffle");
     u8g2_DrawStr(&u8g2, 72, 28, "POGSAG");
     u8g2_DrawStr(&u8g2, 72, 44, _callsign);
