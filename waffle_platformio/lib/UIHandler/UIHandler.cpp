@@ -98,7 +98,7 @@ int UIHandler::splashScreen() {
     // u8g2_DrawStr(&u8g2, 18, 30, "fredcorp.cc");
 
     ESP_LOGI(TAG_UI, "u8g2_DrawBitmap");
-    u8g2_DrawBitmap(&u8g2, 0, 5, 8, 54, wednesday_logo);
+    u8g2_DrawBitmap(&u8g2, 0, 5, 8, 54, waffle_logo);
     ESP_LOGI(TAG_UI, "u8g2_SetFont");
     u8g2_SetFont(&u8g2, u8g2_font_6x13_mf);
     ESP_LOGI(TAG_UI, "u8g2_DrawStr");
