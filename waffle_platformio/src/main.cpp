@@ -276,8 +276,6 @@ void app_main() {
     readConfig(CALLSIGN, &XTIME_ADDRESS, ADDRESSES);
     dumpMessages();
 
-    
-
     uiHandler.init(CALLSIGN, TAG_UI, CODE_REV, ESP_LOG_WARN);
     uiHandler.splashScreen();
 
