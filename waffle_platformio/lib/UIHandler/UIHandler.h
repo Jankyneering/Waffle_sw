@@ -14,6 +14,8 @@
 class UIHandler {
 public:
     UIHandler(int PIN_SDA, int PIN_SCL);
+    UIHandler(int PIN_MOSI, int PIN_SCK, int PIN_CS, int PIN_DC, int PIN_RESET);
+    ~UIHandler();
     int init(char *callsign, const char *TAG, const char *CODE_REV, esp_log_level_t LOG_LEVEL);
     int sleep();
     int wake();
@@ -36,6 +38,11 @@ public:
 private:
     int _PIN_SDA;
     int _PIN_SCL;
+    int _PIN_MOSI;
+    int _PIN_SCK;
+    int _PIN_CS;
+    int _PIN_DC;
+    int _PIN_RESET;
     char *_callsign;
     u8g2_t u8g2;
     const char *TAG_UI;
