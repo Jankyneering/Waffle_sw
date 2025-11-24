@@ -15,8 +15,6 @@
 #include "UIHandler.h"
 #include "graphics.h"
 
-//#define SSD1306
-#define LCD
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
 
@@ -25,6 +23,8 @@ const int menuAmount = 3;
 UIHandler::UIHandler(int PIN_SDA, int PIN_SCL) {
     _PIN_SDA = PIN_SDA;
     _PIN_SCL = PIN_SCL;
+    #define SSD1306
+    #undef LCD
 }
 
 UIHandler::UIHandler(int PIN_MOSI, int PIN_SCK, int PIN_CS, int PIN_DC, int PIN_RESET) {
@@ -33,6 +33,8 @@ UIHandler::UIHandler(int PIN_MOSI, int PIN_SCK, int PIN_CS, int PIN_DC, int PIN_
     _PIN_CS    = PIN_CS;
     _PIN_DC    = PIN_DC;
     _PIN_RESET = PIN_RESET;
+    #define LCD
+    #undef SSD1306
 }
 
 UIHandler::~UIHandler() {

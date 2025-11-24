@@ -5,6 +5,7 @@
 #include <esp_chip_info.h>
 #include <esp_log.h>
 #include <esp_spiffs.h>
+#include <esp_timer.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <fstream>
@@ -12,7 +13,7 @@
 #include <stdio.h>
 
 #include "UIHandler.h"
-#include "radioHandler.h"
+// #include "radioHandler.h"
 
 #include "config.h"
 
@@ -44,8 +45,14 @@ static const char *TAG_LED                 = "[LED       ]";
 static const char *TAG_RADIO               = "[RADIO     ]";
 static const char *TAG_SPIFFS              = "[SPIFFS    ]";
 
-UIHandler uiHandler(PIN_SDA, PIN_SCL);
-radioHandler sxradio(LORA_SCK, LORA_MISO, LORA_MOSI, LORA_SS, LORA_DIO0, LORA_DIO1, LORA_DIO2, LORA_RST);
+#ifdef SSD1306
+UIHandler uiHandler(SDA, SCL);
+#endif
+#ifdef LCD
+UIHandler uiHandler(MOSI, SCK, CS, DC, RST);
+#endif
+
+// radioHandler sxradio(LORA_SCK, LORA_MISO, LORA_MOSI, LORA_SS, LORA_DIO0, LORA_DIO1, LORA_DIO2, LORA_RST);
 
 esp_vfs_spiffs_conf_t config = {
     .base_path              = "/spiffs",
@@ -159,7 +166,7 @@ void vUITask(void *pvParameters) {
     int redrawFlag                  = uiHandler.getRedrawFlag();
     long unsigned int currentTimeS  = 0;
     long unsigned int RSSIlastTimeS = 0;
-    bool RSSIdecay = true;
+    bool RSSIdecay                  = true;
     struct timeval tv;
     for (;;) {
         currentTimeS = esp_timer_get_time() / 1000000;
@@ -172,7 +179,7 @@ void vUITask(void *pvParameters) {
         if (newRSSI) {
             RSSIlastTimeS = currentTimeS;
             uiHandler.setRSSI(RSSI);
-            newRSSI = false;
+            newRSSI   = false;
             RSSIdecay = false;
         }
         if (currentTimeS - RSSIlastTimeS > RSSI_DECAY && !RSSIdecay) {
@@ -199,7 +206,7 @@ void vUITask(void *pvParameters) {
     }
     vTaskDelete(NULL);
 }
-
+/*
 void vRadioTask(void *pvParameters) {
     ESP_LOGI(TAG_RADIO, "Radio is running");
     ESP_LOGI(TAG_RADIO, "Radio is running on core %d\n", xPortGetCoreID());
@@ -249,7 +256,7 @@ void vRadioTask(void *pvParameters) {
 
     vTaskDelete(NULL);
 }
-
+*/
 void vLedTask(void *pvParameters) {
     ESP_LOGI(TAG_LED, "LedTask is running");
     for (;;) {
@@ -301,19 +308,21 @@ void app_main() {
     gpio_isr_handler_add(OK, gpio_isr_handler, (void *)OK);
     gpio_isr_handler_add(DOWN, gpio_isr_handler, (void *)DOWN);
 
-    sxradio.pocsagInit(frequency, offset, TAG_RADIO, ESP_LOG_INFO);
+    // sxradio.pocsagInit(frequency, offset, TAG_RADIO, ESP_LOG_INFO);
 
     esp_log_level_set(TAG_MAIN, ESP_LOG_WARN);
     esp_log_level_set(TAG_LED, ESP_LOG_WARN);
     esp_log_level_set(TAG_SPIFFS, ESP_LOG_INFO);
     esp_log_level_set(TAG_RADIO, ESP_LOG_INFO);
 
-    xTaskCreate(vRadioTask,
-                "RadioTask",
-                50000,
-                NULL,
-                RadioTaskPriority,
-                NULL);
+    esp_log_level_set("*", ESP_LOG_VERBOSE);
+
+    // xTaskCreate(vRadioTask,
+    //             "RadioTask",
+    //             50000,
+    //             NULL,
+    //             RadioTaskPriority,
+    //             NULL);
     xTaskCreate(vLedTask,       // Entry function of the task
                 "LedTask",      // Name of the task
                 5000,           // The number of words to allocate for use as the task's
