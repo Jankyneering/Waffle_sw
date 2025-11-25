@@ -16,13 +16,15 @@
 class UIHandler {
 public:
     UIHandler(int pin_sda, int pin_scl);
-    UIHandler(int pin_mosi, int pin_sck, int pin_cs, int pin_dc, int pin_reset);
+    UIHandler(int pin_mosi, int pin_sck, int pin_cs, int pin_dc, int pin_reset, int pin_backlight);
     ~UIHandler();
     int init(char *callsign, const char *tag, const char *code_rev, esp_log_level_t log_level);
     int sleep();
     int wake();
     int redraw();
 
+    int backlight(bool state);
+    int getBacklightState();
     int blankScreen();
     int splashScreen();
     int showMenu(int menu);
@@ -45,6 +47,7 @@ private:
     int _PIN_CS;
     int _PIN_DC;
     int _PIN_RESET;
+    int _PIN_BACKLIGHT;
     char *_callsign;
     u8g2_t u8g2;
     const char *TAG_UI;
@@ -54,6 +57,7 @@ private:
     int _menuAmount = 3;
     int _redrawFlag = 0;
     bool _gotXTIME  = false;
+    bool _BACKLIGHT_STATE = true;
     void drawRSSIbars(u8g2_t _u8g2, u8g2_uint_t x, u8g2_uint_t y, int rssi);
     void createMenuBar(u8g2_t _u8g2, const char *title);
     int _rssi         = -180;

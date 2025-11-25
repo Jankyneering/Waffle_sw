@@ -49,7 +49,7 @@ static const char *TAG_SPIFFS              = "[SPIFFS    ]";
 UIHandler uiHandler(PIN_SDA, PIN_SCL);
 #endif
 #ifdef ST7567
-UIHandler uiHandler(MOSI, SCK, LCD_CS, LCD_DC, LCD_RST);
+UIHandler uiHandler(MOSI, SCK, LCD_CS, LCD_DC, LCD_RST, LCD_BACKLIGHT);
 #endif
 
 // radioHandler sxradio(LORA_SCK, LORA_MISO, LORA_MOSI, LORA_SS, LORA_DIO0, LORA_DIO1, LORA_DIO2, LORA_RST);
@@ -166,14 +166,27 @@ void vUITask(void *pvParameters) {
     int redrawFlag                  = uiHandler.getRedrawFlag();
     long unsigned int currentTimeS  = 0;
     long unsigned int RSSIlastTimeS = 0;
+    long unsigned int UILastAction  = 0;
     bool RSSIdecay                  = true;
     struct timeval tv;
     for (;;) {
+        // TODO : Refactor this code in the UIHandler class
         currentTimeS = esp_timer_get_time() / 1000000;
 
-        redrawFlag   = uiHandler.getRedrawFlag();
+        if (currentTimeS - UILastAction > DISPLAY_SLEEP_TIME && !uiHandler.sleepFlag) {
+            ESP_LOGI(TAG_MAIN, "UI going to sleep");
+            uiHandler.sleep();
+        }
+        if (currentTimeS - UILastAction > BACKLIGHT_SLEEP_TIME && uiHandler.getBacklightState()) {
+            ESP_LOGI(TAG_MAIN, "UI backlight off");
+            uiHandler.backlight(0);
+        }
+
+        redrawFlag = uiHandler.getRedrawFlag();
         if (redrawFlag > 0) {
+            UILastAction = currentTimeS;
             uiHandler.redraw();
+            uiHandler.backlight(1);
             uiHandler.sleepFlag ? uiHandler.sleep() : uiHandler.wake();
         }
         if (newRSSI) {
@@ -260,7 +273,7 @@ void vRadioTask(void *pvParameters) {
 void vLedTask(void *pvParameters) {
     ESP_LOGI(TAG_LED, "LedTask is running");
     for (;;) {
-        ESP_LOGI(TAG_LED, "LedTask is running on core %d\n", xPortGetCoreID());
+        ESP_LOGV(TAG_LED, "LedTask is running on core %d\n", xPortGetCoreID());
         ledState = !ledState;
         gpio_set_level(LED, ledState);
         vTaskDelay(500 / portTICK_PERIOD_MS);
@@ -340,7 +353,7 @@ void app_main() {
 
     for (;;) {
         // Display the core on which the main function is running
-        ESP_LOGI(TAG_MAIN, "app_main() is running on core %d\n", xPortGetCoreID());
+        ESP_LOGV(TAG_MAIN, "app_main() is running on core %d\n", xPortGetCoreID());
         // struct timeval tv;
         // gettimeofday(&tv, NULL);
         // time_t now = tv.tv_sec;

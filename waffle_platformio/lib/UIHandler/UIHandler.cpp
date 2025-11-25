@@ -25,12 +25,13 @@ UIHandler::UIHandler(int pin_sda, int pin_scl) {
     _PIN_SCL = pin_scl;
 }
 
-UIHandler::UIHandler(int pin_mosi, int pin_sck, int pin_cs, int pin_dc, int pin_reset) {
-    _PIN_MOSI  = pin_mosi;
-    _PIN_SCK   = pin_sck;
-    _PIN_CS    = pin_cs;
-    _PIN_DC    = pin_dc;
-    _PIN_RESET = pin_reset;
+UIHandler::UIHandler(int pin_mosi, int pin_sck, int pin_cs, int pin_dc, int pin_reset, int pin_backlight) {
+    _PIN_MOSI      = pin_mosi;
+    _PIN_SCK       = pin_sck;
+    _PIN_CS        = pin_cs;
+    _PIN_DC        = pin_dc;
+    _PIN_RESET     = pin_reset;
+    _PIN_BACKLIGHT = pin_backlight;
 }
 
 UIHandler::~UIHandler() {
@@ -58,7 +59,7 @@ int UIHandler::init(char *callsign, const char *tag, const char *code_rev, esp_l
     u8x8_SetI2CAddress(&u8g2.u8x8, 0x3c);
 #endif
 
-#ifdef LCD
+#ifdef ST7567
     u8g2_esp32_hal.bus.spi.clk  = (gpio_num_t)_PIN_SCK;
     u8g2_esp32_hal.bus.spi.cs   = (gpio_num_t)_PIN_CS;
     u8g2_esp32_hal.bus.spi.mosi = (gpio_num_t)_PIN_MOSI;
@@ -70,13 +71,15 @@ int UIHandler::init(char *callsign, const char *tag, const char *code_rev, esp_l
         // u8x8_byte_3wire_sw_spi,
         u8g2_esp32_spi_byte_cb,
         u8g2_esp32_gpio_and_delay_cb); // init u8g2 structure
+
+    gpio_set_direction((gpio_num_t)_PIN_BACKLIGHT, GPIO_MODE_OUTPUT);
 #endif
 
     ESP_LOGI(TAG_UI, "u8g2_InitDisplay");
     u8g2_InitDisplay(&u8g2); // send init sequence to the display, display
                              // is in sleep mode after this,
 
-#ifdef LCD
+#ifdef ST7567
     u8g2_SetFlipMode(&u8g2, 1);
     u8g2_SetContrast(&u8g2, 200);
 #endif
@@ -88,14 +91,37 @@ int UIHandler::init(char *callsign, const char *tag, const char *code_rev, esp_l
 
 int UIHandler::sleep() {
     ESP_LOGI(TAG_UI, "Putting display to sleep");
+    sleepFlag = true;
     u8g2_SetPowerSave(&u8g2, 1);
+#ifdef ST7567
+    backlight(0);
+#endif
     return 0;
 }
 
 int UIHandler::wake() {
-    // ESP_LOGI(TAG_UI, "Waking display");
+    ESP_LOGI(TAG_UI, "Waking display");
+    sleepFlag = false;
     u8g2_SetPowerSave(&u8g2, 0);
+#ifdef ST7567
+    backlight(1);
+#endif
     return 0;
+}
+
+int UIHandler::backlight(bool state) {
+#ifdef ST7567
+    ESP_LOGI(TAG_UI, "Setting backlight to %d", state);
+    _BACKLIGHT_STATE = state;
+    gpio_set_level((gpio_num_t)_PIN_BACKLIGHT, state);
+#elif SSD1306
+    ESP_LOGW(TAG_UI, "No backlight on SSD1306 display");
+#endif
+    return 0;
+}
+
+int UIHandler::getBacklightState() {
+    return _BACKLIGHT_STATE;
 }
 
 int UIHandler::redraw() {
@@ -127,7 +153,11 @@ int UIHandler::splashScreen() {
     // u8g2_DrawStr(&u8g2, 18, 30, "fredcorp.cc");
 
     ESP_LOGI(TAG_UI, "u8g2_DrawBitmap");
+#ifdef RELEASE
     u8g2_DrawBitmap(&u8g2, 0, 0, 8, 54, waffle_logo);
+#elif DEBUG
+    u8g2_DrawBitmap(&u8g2, 0, 0, 8, 54, wednesday_logo);
+#endif
     ESP_LOGI(TAG_UI, "u8g2_SetFont");
     u8g2_SetFont(&u8g2, u8g2_font_6x13_mf);
     ESP_LOGI(TAG_UI, "u8g2_DrawStr");

@@ -1,23 +1,21 @@
 #define CODE_REV "    dev    "
 
 // Variables for radio
-#define offset 0.0035       // device specific, in MHz. See README.md for more information on the matter.
-#define frequency 439.98750 // Operational frequency
-#define RSSI_DECAY 600      // Decay of the RSSI value in seconds
+#define offset 0.0035           // device specific, in MHz. See README.md for more information on the matter.
+#define frequency 439.98750     // Operational frequency
+#define RSSI_DECAY 600          // Decay of the RSSI value in seconds
+#define BACKLIGHT_SLEEP_TIME 10 // Time in seconds before the backlight goes off
+#define DISPLAY_SLEEP_TIME 30   // Time in seconds before the display goes to sleep
 
 /*
  * Display selection
- * If OLED is defined, SSD1306 is used.
- * If LCD is defined, ST7567 is used.
  * Only one display type can be selected at a time.
  */
-#ifdef OLED
-#define SSD1306
-#undef LCD
+#ifdef SSD1306
+#undef ST7567
 #endif
 
-#ifdef LCD
-#define ST7567
+#ifdef ST7567
 #undef SSD1306
 #endif
 
@@ -55,6 +53,7 @@
 #define LCD_CS 18
 #define LCD_DC 21
 #define LCD_RST 16
+#define LCD_BACKLIGHT 17
 
 #define LED GPIO_NUM_5
 #define UP GPIO_NUM_13
