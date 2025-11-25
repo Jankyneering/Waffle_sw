@@ -20,32 +20,28 @@
 
 const int menuAmount = 3;
 
-UIHandler::UIHandler(int PIN_SDA, int PIN_SCL) {
-    _PIN_SDA = PIN_SDA;
-    _PIN_SCL = PIN_SCL;
-    #define SSD1306
-    #undef LCD
+UIHandler::UIHandler(int pin_sda, int pin_scl) {
+    _PIN_SDA = pin_sda;
+    _PIN_SCL = pin_scl;
 }
 
-UIHandler::UIHandler(int PIN_MOSI, int PIN_SCK, int PIN_CS, int PIN_DC, int PIN_RESET) {
-    _PIN_MOSI  = PIN_MOSI;
-    _PIN_SCK   = PIN_SCK;
-    _PIN_CS    = PIN_CS;
-    _PIN_DC    = PIN_DC;
-    _PIN_RESET = PIN_RESET;
-    #define LCD
-    #undef SSD1306
+UIHandler::UIHandler(int pin_mosi, int pin_sck, int pin_cs, int pin_dc, int pin_reset) {
+    _PIN_MOSI  = pin_mosi;
+    _PIN_SCK   = pin_sck;
+    _PIN_CS    = pin_cs;
+    _PIN_DC    = pin_dc;
+    _PIN_RESET = pin_reset;
 }
 
 UIHandler::~UIHandler() {
     ESP_LOGI(TAG_UI, "Destroying UIHandler");
 }
 
-int UIHandler::init(char *callsign, const char *TAG, const char *CODE_REV, esp_log_level_t LOG_LEVEL = ESP_LOG_INFO) {
+int UIHandler::init(char *callsign, const char *tag, const char *code_rev, esp_log_level_t log_level = ESP_LOG_INFO) {
     _callsign  = callsign;
-    TAG_UI     = TAG;
-    _LOG_LEVEL = LOG_LEVEL;
-    _code_rev  = CODE_REV;
+    TAG_UI     = tag;
+    _LOG_LEVEL = log_level;
+    _code_rev  = code_rev;
     esp_log_level_set(TAG_UI, _LOG_LEVEL);
     ESP_LOGI(TAG_UI, "Initializing UIHandler");
     u8g2_esp32_hal_t u8g2_esp32_hal = U8G2_ESP32_HAL_DEFAULT;
@@ -53,9 +49,7 @@ int UIHandler::init(char *callsign, const char *TAG, const char *CODE_REV, esp_l
 #ifdef SSD1306
     u8g2_esp32_hal.bus.i2c.sda = (gpio_num_t)_PIN_SDA;
     u8g2_esp32_hal.bus.i2c.scl = (gpio_num_t)_PIN_SCL;
-    u8g2_esp32_hal.clk_speed   = 400000;
     u8g2_esp32_hal_init(u8g2_esp32_hal);
-
     u8g2_Setup_ssd1306_i2c_128x64_noname_f(
         &u8g2, U8G2_R0,
         // u8x8_byte_sw_i2c,
@@ -63,44 +57,24 @@ int UIHandler::init(char *callsign, const char *TAG, const char *CODE_REV, esp_l
         u8g2_esp32_gpio_and_delay_cb); // init u8g2 structure
     u8x8_SetI2CAddress(&u8g2.u8x8, 0x3c);
 #endif
+
 #ifdef LCD
-    u8g2_esp32_hal.bus.spi.clk = (gpio_num_t)_PIN_SCK;
-    u8g2_esp32_hal.bus.spi.cs = (gpio_num_t)_PIN_CS;
+    u8g2_esp32_hal.bus.spi.clk  = (gpio_num_t)_PIN_SCK;
+    u8g2_esp32_hal.bus.spi.cs   = (gpio_num_t)_PIN_CS;
     u8g2_esp32_hal.bus.spi.mosi = (gpio_num_t)_PIN_MOSI;
-    u8g2_esp32_hal.dc = (gpio_num_t)_PIN_DC;
-    u8g2_esp32_hal.reset = (gpio_num_t)_PIN_RESET;
+    u8g2_esp32_hal.dc           = (gpio_num_t)_PIN_DC;
+    u8g2_esp32_hal.reset        = (gpio_num_t)_PIN_RESET;
     u8g2_esp32_hal_init(u8g2_esp32_hal);
     u8g2_Setup_st7567_enh_dg128064i_f(
         &u8g2, U8G2_R0,
         // u8x8_byte_3wire_sw_spi,
         u8g2_esp32_spi_byte_cb,
         u8g2_esp32_gpio_and_delay_cb); // init u8g2 structure
-
-    // u8x8_byte_SetDC(&u8g2.u8x8, (gpio_num_t)_PIN_DC);
-    // u8x8_gpio_SetReset(&u8g2.u8x8, (gpio_num_t)_PIN_RESET);
-
-
-
-
-    // u8g2_esp32_hal.bus.i2c.sda = (gpio_num_t)35;
-    // u8g2_esp32_hal.bus.i2c.scl = (gpio_num_t)36;
-    // //u8g2_esp32_hal.clk_speed   = 400000;
-    // u8g2_esp32_hal_init(u8g2_esp32_hal);
-    // u8g2_Setup_st7567_i2c_enh_dg128064i_f(
-    //     &u8g2, U8G2_R0,
-    //     // u8x8_byte_sw_i2c,
-    //     u8g2_esp32_i2c_byte_cb,
-    //     u8g2_esp32_gpio_and_delay_cb); // init u8g2 structure
-    // u8x8_SetI2CAddress(&u8g2.u8x8, 0x3f*2);
-    // u8x8_byte_SetDC(&u8g2.u8x8, (gpio_num_t)_PIN_DC);
-
-
 #endif
 
     ESP_LOGI(TAG_UI, "u8g2_InitDisplay");
     u8g2_InitDisplay(&u8g2); // send init sequence to the display, display
                              // is in sleep mode after this,
-
 
 #ifdef LCD
     u8g2_SetFlipMode(&u8g2, 1);

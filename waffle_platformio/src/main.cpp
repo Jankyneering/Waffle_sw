@@ -46,10 +46,10 @@ static const char *TAG_RADIO               = "[RADIO     ]";
 static const char *TAG_SPIFFS              = "[SPIFFS    ]";
 
 #ifdef SSD1306
-UIHandler uiHandler(SDA, SCL);
+UIHandler uiHandler(PIN_SDA, PIN_SCL);
 #endif
-#ifdef LCD
-UIHandler uiHandler(MOSI, SCK, CS, DC, RST);
+#ifdef ST7567
+UIHandler uiHandler(MOSI, SCK, LCD_CS, LCD_DC, LCD_RST);
 #endif
 
 // radioHandler sxradio(LORA_SCK, LORA_MISO, LORA_MOSI, LORA_SS, LORA_DIO0, LORA_DIO1, LORA_DIO2, LORA_RST);

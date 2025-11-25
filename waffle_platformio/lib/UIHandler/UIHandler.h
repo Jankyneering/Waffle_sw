@@ -11,12 +11,14 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "config.h"
+
 class UIHandler {
 public:
-    UIHandler(int PIN_SDA, int PIN_SCL);
-    UIHandler(int PIN_MOSI, int PIN_SCK, int PIN_CS, int PIN_DC, int PIN_RESET);
+    UIHandler(int pin_sda, int pin_scl);
+    UIHandler(int pin_mosi, int pin_sck, int pin_cs, int pin_dc, int pin_reset);
     ~UIHandler();
-    int init(char *callsign, const char *TAG, const char *CODE_REV, esp_log_level_t LOG_LEVEL);
+    int init(char *callsign, const char *tag, const char *code_rev, esp_log_level_t log_level);
     int sleep();
     int wake();
     int redraw();
