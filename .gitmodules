@@ -1,7 +1,3 @@
 [submodule "U8g2lib"]
 	path = waffle_platformio/components/u8g2
 	url = git@github.com:olikraus/u8g2.git
-
-[submodule "RadioLib"]
-	path = waffle_platformio/components/RadioLib
-	url = https://github.com/jgromes/RadioLib
